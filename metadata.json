@@ -1,0 +1,8 @@
+{
+  "name": "Remix ACC Bioscience Incubator - Evaluation \u0026 Admission Portal",
+  "description": "Applicant review scorecard, committee consensus scoreboard, and founder pitch feedback report for ACC Bioscience Incubator.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
