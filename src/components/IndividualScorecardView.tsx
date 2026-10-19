@@ -389,7 +389,7 @@ export const IndividualScorecardView: React.FC = () => {
   };
 
   return (
-    <div className="w-full pt-6 sm:pt-8 pb-32 bg-[#F8FAFD] min-h-screen text-slate-900">
+    <div className="w-full pt-6 sm:pt-8 pb-32 bg-canvas min-h-screen text-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         {/* Main Two-Column Layout */}
         <div className="flex flex-col lg:flex-row items-start gap-8">
@@ -399,10 +399,10 @@ export const IndividualScorecardView: React.FC = () => {
           <aside className="w-full lg:w-80 xl:w-88 shrink-0 lg:sticky lg:top-24 space-y-5">
             {/* Company Overview Card */}
             <div className="bg-white rounded-3xl border-2 border-slate-200/90 shadow-sm p-6 relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#431A4D] via-[#78BE20] to-[#431A4D]" />
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
 
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#431A4D] text-white">
+                <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary text-white">
                   Cohort 2026.1
                 </span>
                 <span className="text-xs font-bold text-slate-500">Applicant Reference</span>
@@ -418,7 +418,7 @@ export const IndividualScorecardView: React.FC = () => {
               <div className="my-5 pt-4 border-t border-slate-100 space-y-3 text-xs sm:text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500 font-semibold flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-[#78BE20]" />
+                    <Calendar className="w-4 h-4 text-accent" />
                     Pitch Date
                   </span>
                   <span className="font-bold text-slate-900">{company.reviewDate}</span>
@@ -426,7 +426,7 @@ export const IndividualScorecardView: React.FC = () => {
 
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500 font-semibold flex items-center gap-1.5">
-                    <Building2 className="w-4 h-4 text-[#431A4D]" />
+                    <Building2 className="w-4 h-4 text-primary" />
                     Review Round
                   </span>
                   <span className="font-bold text-slate-900">{company.round}</span>
@@ -447,10 +447,10 @@ export const IndividualScorecardView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsPitchDeckModalOpen(true)}
-                className="w-full min-h-[44px] px-4 py-3 rounded-2xl bg-slate-900 hover:bg-[#431A4D] text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#78BE20] focus:ring-offset-2"
+                className="w-full min-h-[44px] px-4 py-3 rounded-2xl bg-slate-900 hover:bg-primary text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                 aria-label="Preview Pitch Deck PDF"
               >
-                <FileText className="w-4 h-4 text-[#78BE20]" />
+                <FileText className="w-4 h-4 text-accent" />
                 <span>Preview Pitch Deck (PDF)</span>
                 <ExternalLink className="w-3.5 h-3.5 opacity-60 ml-auto" />
               </button>
@@ -459,7 +459,7 @@ export const IndividualScorecardView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCompanyModalOpen(true)}
-                  className="text-xs font-semibold text-slate-500 hover:text-[#431A4D] transition-colors cursor-pointer py-1"
+                  className="text-xs font-semibold text-slate-500 hover:text-primary transition-colors cursor-pointer py-1"
                 >
                   Switch Company Profile ({companies.length} loaded)
                 </button>
@@ -470,7 +470,7 @@ export const IndividualScorecardView: React.FC = () => {
             <div className="bg-white rounded-3xl border-2 border-slate-200/90 shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#431A4D]" />
+                  <Users className="w-4 h-4 text-primary" />
                   <h3 className="font-extrabold text-sm text-slate-900 uppercase tracking-wider">
                     Steering Committee
                   </h3>
@@ -494,7 +494,7 @@ export const IndividualScorecardView: React.FC = () => {
                       onClick={() => setActiveReviewerId(rev.id)}
                       className={`w-full p-2.5 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
                         isActive
-                          ? 'bg-[#F4EBF7] border-[#431A4D] shadow-xs'
+                          ? 'bg-primary-light border-primary shadow-xs'
                           : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200 text-slate-700'
                       }`}
                       aria-current={isActive ? 'true' : undefined}
@@ -502,7 +502,7 @@ export const IndividualScorecardView: React.FC = () => {
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
                           isActive
-                            ? 'bg-[#431A4D] text-white'
+                            ? 'bg-primary text-white'
                             : 'bg-white text-slate-700 border border-slate-300'
                         }`}
                       >
@@ -513,7 +513,7 @@ export const IndividualScorecardView: React.FC = () => {
                         <div className="text-xs font-bold text-slate-900 truncate flex items-center gap-1.5">
                           <span>{rev.name}</span>
                           {isActive && (
-                            <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-[#431A4D] text-white">
+                            <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-primary text-white">
                               You
                             </span>
                           )}
@@ -574,7 +574,7 @@ export const IndividualScorecardView: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
                 <div>
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <span className="text-xs font-extrabold uppercase tracking-wider text-[#431A4D]">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-primary">
                       Individual Review Scorecard
                     </span>
                     <span className="text-slate-300">•</span>
@@ -595,8 +595,8 @@ export const IndividualScorecardView: React.FC = () => {
                       <span>Submitted - Read-Only</span>
                     </span>
                   ) : isEditingSubmitted ? (
-                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-purple-50 text-[#431A4D] border-2 border-purple-200 font-bold text-xs sm:text-sm shadow-2xs">
-                      <Clock className="w-4 h-4 text-[#431A4D]" />
+                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-purple-50 text-primary border-2 border-purple-200 font-bold text-xs sm:text-sm shadow-2xs">
+                      <Clock className="w-4 h-4 text-primary" />
                       <span>Editing Submission</span>
                     </span>
                   ) : (
@@ -612,10 +612,10 @@ export const IndividualScorecardView: React.FC = () => {
               <div className="mt-5">
                 <div className="flex items-center justify-between gap-3 mb-2">
                   <span className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
-                    <CheckSquare className="w-4 h-4 text-[#78BE20]" />
+                    <CheckSquare className="w-4 h-4 text-accent" />
                     <span>Evaluation Progress</span>
                   </span>
-                  <span className="text-sm font-black text-[#431A4D]">
+                  <span className="text-sm font-black text-primary">
                     {completedSectionsCount} of 4 sections complete ({progressPercentage}%)
                   </span>
                 </div>
@@ -630,7 +630,7 @@ export const IndividualScorecardView: React.FC = () => {
                   aria-label="Scorecard completion progress"
                 >
                   <div
-                    className="h-full bg-gradient-to-r from-[#431A4D] to-[#78BE20] rounded-full transition-all duration-500 ease-out"
+                    className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${progressPercentage}%` }}
                   />
                 </div>
@@ -656,7 +656,7 @@ export const IndividualScorecardView: React.FC = () => {
                       onClick={() => scrollToSection(sec.id)}
                       className={`flex-1 min-h-[44px] px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
                         isCurrent
-                          ? 'bg-[#431A4D] text-white shadow-xs'
+                          ? 'bg-primary text-white shadow-xs'
                           : 'bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200/80'
                       }`}
                     >
@@ -665,7 +665,7 @@ export const IndividualScorecardView: React.FC = () => {
                         <span
                           className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
                             isCurrent
-                              ? 'bg-[#78BE20] text-slate-950'
+                              ? 'bg-accent text-slate-950'
                               : 'bg-emerald-100 text-emerald-700'
                           }`}
                         >
@@ -696,7 +696,7 @@ export const IndividualScorecardView: React.FC = () => {
                   {/* Category Section Header */}
                   <div className="flex items-start justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-2xl bg-[#431A4D] text-white flex items-center justify-center font-black text-base shadow-xs shrink-0">
+                      <div className="w-9 h-9 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-base shadow-xs shrink-0">
                         {sec.number}
                       </div>
                       <div>
@@ -718,8 +718,8 @@ export const IndividualScorecardView: React.FC = () => {
 
                   {/* Header Prompt Box (Primary Category Standard) */}
                   <div className="mb-4 p-4.5 rounded-2xl bg-purple-50/70 border-2 border-purple-200/80">
-                    <div className="text-xs font-extrabold uppercase tracking-wider text-[#431A4D] mb-1.5 flex items-center gap-1.5">
-                      <HelpCircle className="w-4 h-4 text-[#431A4D]" />
+                    <div className="text-xs font-extrabold uppercase tracking-wider text-primary mb-1.5 flex items-center gap-1.5">
+                      <HelpCircle className="w-4 h-4 text-primary" />
                       <span>Category Standard</span>
                     </div>
                     <div className="text-base sm:text-lg text-slate-950 font-bold leading-relaxed">
@@ -797,11 +797,11 @@ export const IndividualScorecardView: React.FC = () => {
                             className={`min-h-[58px] sm:min-h-[64px] rounded-2xl border-2 flex flex-col items-center justify-center p-1 sm:p-2 transition-all ${
                               isReadOnly
                                 ? isSelected
-                                  ? 'bg-[#431A4D] text-white border-[#431A4D] shadow-xs cursor-default font-black'
+                                  ? 'bg-primary text-white border-primary shadow-xs cursor-default font-black'
                                   : 'bg-slate-100/70 text-slate-400 border-slate-200 cursor-default opacity-40 hover:bg-slate-100/70'
                                 : isSelected
-                                ? 'bg-[#431A4D] text-white border-[#34143D] shadow-md scale-[1.02] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#431A4D] focus:ring-offset-2'
-                                : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-300 hover:border-slate-400 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#431A4D] focus:ring-offset-2'
+                                ? 'bg-primary text-white border-primary-hover shadow-md scale-[1.02] cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
+                                : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-300 hover:border-slate-400 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
                             }`}
                           >
                             <span className="text-xl sm:text-2xl font-black font-mono leading-none">
@@ -836,7 +836,7 @@ export const IndividualScorecardView: React.FC = () => {
                       <div className="flex items-center gap-2">
                         {isReadOnly && (
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-slate-200/70 px-2 py-0.5 rounded">
-                            <Lock className="w-3 h-3 text-slate-400" /> Locked (Read-Only)
+                            <Lock className="w-3-3 text-slate-400" /> Locked (Read-Only)
                           </span>
                         )}
                         {!isReadOnly && (
@@ -862,7 +862,7 @@ export const IndividualScorecardView: React.FC = () => {
                       className={`w-full min-h-[96px] p-4 text-sm sm:text-base rounded-2xl transition-colors leading-relaxed ${
                         isReadOnly
                           ? 'bg-slate-100/90 border border-dashed border-slate-300 text-slate-800 font-medium cursor-default select-text focus:outline-none'
-                          : 'bg-white text-slate-900 border-2 border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#431A4D] focus:border-[#431A4D] placeholder:text-slate-400 shadow-2xs'
+                          : 'bg-white text-slate-900 border-2 border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary placeholder:text-slate-400 shadow-2xs'
                       }`}
                     />
                   </div>
@@ -885,7 +885,7 @@ export const IndividualScorecardView: React.FC = () => {
           {/* Status & Reviewer Summary */}
           <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-slate-600">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-[#431A4D] text-white flex items-center justify-center font-bold text-xs shrink-0">
+              <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shrink-0">
                 {currentReviewer.initials}
               </div>
               <span className="font-bold text-slate-900 truncate">
@@ -918,7 +918,7 @@ export const IndividualScorecardView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleStartEditing}
-                className="flex-1 sm:flex-none min-h-[44px] px-6 py-2.5 rounded-2xl border-2 border-slate-300 hover:border-[#431A4D] bg-white text-slate-800 hover:text-[#431A4D] hover:bg-slate-50 font-bold text-sm shadow-2xs transition-colors flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#431A4D]"
+                className="flex-1 sm:flex-none min-h-[44px] px-6 py-2.5 rounded-2xl border-2 border-slate-300 hover:border-primary bg-white text-slate-800 hover:text-primary hover:bg-slate-50 font-bold text-sm shadow-2xs transition-colors flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                 aria-label="Unlock and edit scorecard submission"
               >
                 <Edit3 className="w-4 h-4 text-slate-600" />
@@ -940,10 +940,10 @@ export const IndividualScorecardView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleUpdateAndResubmit}
-                  className="flex-1 sm:flex-none min-h-[44px] px-6 py-2.5 rounded-2xl bg-[#431A4D] hover:bg-[#34143D] text-white font-extrabold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#78BE20] focus:ring-offset-2"
+                  className="flex-1 sm:flex-none min-h-[44px] px-6 py-2.5 rounded-2xl bg-primary hover:bg-primary-hover text-white font-extrabold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                   aria-label="Update and re-submit final committee scorecard"
                 >
-                  <CheckCircle2 className="w-4 h-4 text-[#78BE20]" />
+                  <CheckCircle2 className="w-4 h-4 text-accent" />
                   <span>Update &amp; Re-Submit Scorecard</span>
                 </button>
               </>
@@ -953,7 +953,7 @@ export const IndividualScorecardView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleSaveDraft}
-                  className="flex-1 sm:flex-none min-h-[44px] px-5 py-2.5 rounded-2xl border-2 border-slate-300 hover:border-slate-400 bg-white text-slate-800 hover:bg-slate-50 font-bold text-sm shadow-2xs transition-colors flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#431A4D]"
+                  className="flex-1 sm:flex-none min-h-[44px] px-5 py-2.5 rounded-2xl border-2 border-slate-300 hover:border-slate-400 bg-white text-slate-800 hover:bg-slate-50 font-bold text-sm shadow-2xs transition-colors flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                   aria-label="Save scorecard draft"
                 >
                   <Save className="w-4 h-4 text-slate-600" />
@@ -963,10 +963,10 @@ export const IndividualScorecardView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleSubmitFinal}
-                  className="flex-1 sm:flex-none min-h-[44px] px-6 py-2.5 rounded-2xl bg-[#431A4D] hover:bg-[#34143D] text-white font-extrabold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#78BE20] focus:ring-offset-2"
+                  className="flex-1 sm:flex-none min-h-[44px] px-6 py-2.5 rounded-2xl bg-primary hover:bg-primary-hover text-white font-extrabold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
                   aria-label="Submit final committee scorecard"
                 >
-                  <CheckCircle2 className="w-4 h-4 text-[#78BE20]" />
+                  <CheckCircle2 className="w-4 h-4 text-accent" />
                   <span>Submit Final Scorecard</span>
                 </button>
               </>

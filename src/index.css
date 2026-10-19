@@ -1,5 +1,58 @@
 @import "tailwindcss";
 
+@theme {
+  /* Primary Role (ABI Prototype Purple) */
+  --color-primary: #431a4d;
+  --color-primary-hover: #34143d;
+  --color-primary-active: #2a1032;
+  --color-primary-light: #f3ebfa;
+  --color-primary-subtle: #efe6f7;
+  --color-primary-border: rgba(67, 26, 77, 0.2);
+
+  /* Accent Role (ABI Prototype Lime Green) */
+  --color-accent: #78be20;
+  --color-accent-hover: #68a81b;
+  --color-accent-light: #f2f9ec;
+  --color-accent-border: rgba(120, 190, 32, 0.4);
+
+  /* Modal Header Role (Alternate purple in Workspace & Email modals) */
+  --color-modal-header: #4d1979;
+  --color-modal-header-hover: #34005b;
+
+  /* Canvas & Surface Roles */
+  --color-canvas: #f8fafd;
+  --color-canvas-subtle: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1f5f9;
+
+  /* Typography / Text Roles */
+  --color-text-main: #141b2b;
+  --color-text-body: #1e293b;
+  --color-text-muted: #64748b;
+  --color-text-subtle: #94a3b8;
+
+  /* Semantic / Status Roles */
+  --color-status-success: #10b981;
+  --color-status-success-dark: #008a2e;
+  --color-status-success-light: #f2f9ec;
+
+  --color-status-warning: #f59e0b;
+  --color-status-warning-dark: #d97706;
+  --color-status-warning-light: #fffdf7;
+
+  --color-status-danger: #ef4444;
+  --color-status-danger-dark: #dc2626;
+  --color-status-danger-light: #fef2f2;
+
+  --color-status-info: #2563eb;
+  --color-status-info-light: #eff6ff;
+
+  /* Notice / Gold Accent (Toasts & Notices) */
+  --color-notice: #f0b323;
+  --color-notice-hover: #e0a418;
+  --color-notice-dark: #2c1e00;
+}
+
 @layer base {
   html, body {
     margin: 0;

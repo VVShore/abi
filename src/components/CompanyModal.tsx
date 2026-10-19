@@ -102,7 +102,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({ mode = 'edit' }) => 
           <div className="flex items-center gap-3">
             <AbiLogo size={28} />
             <div>
-              <h2 className="text-lg font-bold text-[#1E293B]">
+              <h2 className="text-lg font-bold text-text-body">
                 {isCreating ? 'Add New Applicant Company' : 'Edit Company Information'}
               </h2>
               <p className="text-xs text-slate-500">
@@ -140,7 +140,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({ mode = 'edit' }) => 
                 });
               }}
               className={`flex-1 py-1.5 rounded-md transition-all ${
-                !isCreating ? 'bg-white shadow-2xs text-[#431A4D] font-bold' : 'text-slate-600 hover:text-slate-900'
+                !isCreating ? 'bg-white shadow-2xs text-primary font-bold' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Edit Current ({company.name})
@@ -160,7 +160,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({ mode = 'edit' }) => 
                 });
               }}
               className={`flex-1 py-1.5 rounded-md transition-all ${
-                isCreating ? 'bg-white shadow-2xs text-[#431A4D] font-bold' : 'text-slate-600 hover:text-slate-900'
+                isCreating ? 'bg-white shadow-2xs text-primary font-bold' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               + Create New Company
@@ -180,7 +180,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({ mode = 'edit' }) => 
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Vayim, BioNanox, Austin Gene Lab"
-                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#78BE20] bg-white font-semibold text-slate-900"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-white font-semibold text-slate-900"
               />
             </div>
           </div>
@@ -197,7 +197,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({ mode = 'edit' }) => 
                 value={formData.domain}
                 onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                 placeholder="e.g. ENT Biofilm Therapeutics, Microfluidics, Genomics"
-                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#78BE20] bg-white text-slate-800"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-white text-slate-800"
               />
             </div>
           </div>
@@ -215,7 +215,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({ mode = 'edit' }) => 
                   value={formData.reviewDate}
                   onChange={(e) => setFormData({ ...formData, reviewDate: e.target.value })}
                   placeholder="e.g. Jan 23, 2026"
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#78BE20] bg-white text-slate-800"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-white text-slate-800"
                 />
               </div>
             </div>
@@ -232,7 +232,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({ mode = 'edit' }) => 
                   value={formData.round}
                   onChange={(e) => setFormData({ ...formData, round: e.target.value })}
                   placeholder="e.g. Round 1 Evaluation"
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#78BE20] bg-white text-slate-800"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-white text-slate-800"
                 />
               </div>
             </div>
@@ -247,7 +247,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({ mode = 'edit' }) => 
               <select
                 value={formData.admissionStatus}
                 onChange={(e) => setFormData({ ...formData, admissionStatus: e.target.value as any })}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#78BE20] bg-white text-slate-800 font-medium"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-white text-slate-800 font-medium"
               >
                 <option value="Pending">Pending Review</option>
                 <option value="Approved">Approved for Admission</option>
@@ -267,7 +267,7 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({ mode = 'edit' }) => 
                 max="5"
                 value={formData.thresholdScore}
                 onChange={(e) => setFormData({ ...formData, thresholdScore: parseFloat(e.target.value) || 3.5 })}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#78BE20] bg-white text-slate-800 font-mono"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-white text-slate-800 font-mono"
               />
             </div>
           </div>
@@ -298,9 +298,9 @@ export const CompanyModal: React.FC<CompanyModalProps> = ({ mode = 'edit' }) => 
               </button>
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold bg-[#431A4D] hover:bg-[#34143D] text-white rounded-lg shadow-sm transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold bg-primary hover:bg-primary-hover text-white rounded-lg shadow-sm transition-all cursor-pointer"
               >
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#78BE20]" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
                 <span>{isCreating ? 'Create Scorecard' : 'Save Details'}</span>
               </button>
             </div>

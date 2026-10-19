@@ -172,10 +172,10 @@ function generateFounderFeedbackDoc() {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
       <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border-2 border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="bg-[#4D1979] text-white p-5 sm:p-6 flex items-center justify-between">
+        <div className="bg-modal-header text-white p-5 sm:p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-              <FileSpreadsheet className="w-6 h-6 text-[#F0B323]" />
+              <FileSpreadsheet className="w-6 h-6 text-notice" />
             </div>
             <div>
               <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
@@ -200,7 +200,7 @@ function generateFounderFeedbackDoc() {
             onClick={() => setActiveTab('limitations')}
             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
               activeTab === 'limitations'
-                ? 'bg-white text-[#4D1979] shadow-xs'
+                ? 'bg-white text-modal-header shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -210,7 +210,7 @@ function generateFounderFeedbackDoc() {
             onClick={() => setActiveTab('script')}
             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
               activeTab === 'script'
-                ? 'bg-white text-[#4D1979] shadow-xs'
+                ? 'bg-white text-modal-header shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -220,7 +220,7 @@ function generateFounderFeedbackDoc() {
             onClick={() => setActiveTab('sheets')}
             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${
               activeTab === 'sheets'
-                ? 'bg-white text-[#4D1979] shadow-xs'
+                ? 'bg-white text-modal-header shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -247,8 +247,8 @@ function generateFounderFeedbackDoc() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Limitation 1 */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-[#4D1979] font-bold text-base mb-1">
-                    <span className="w-6 h-6 rounded-full bg-[#F3EBFA] flex items-center justify-center text-xs">1</span>
+                  <div className="flex items-center gap-2 text-modal-header font-bold text-base mb-1">
+                    <span className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center text-xs">1</span>
                     No Side-by-Side Pitch Notes
                   </div>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -258,8 +258,8 @@ function generateFounderFeedbackDoc() {
 
                 {/* Limitation 2 */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-[#4D1979] font-bold text-base mb-1">
-                    <span className="w-6 h-6 rounded-full bg-[#F3EBFA] flex items-center justify-center text-xs">2</span>
+                  <div className="flex items-center gap-2 text-modal-header font-bold text-base mb-1">
+                    <span className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center text-xs">2</span>
                     No Reactive Real-Time Scoring
                   </div>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -269,8 +269,8 @@ function generateFounderFeedbackDoc() {
 
                 {/* Limitation 3 */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-[#4D1979] font-bold text-base mb-1">
-                    <span className="w-6 h-6 rounded-full bg-[#F3EBFA] flex items-center justify-center text-xs">3</span>
+                  <div className="flex items-center gap-2 text-modal-header font-bold text-base mb-1">
+                    <span className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center text-xs">3</span>
                     No Multi-Reviewer Consensus Board
                   </div>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -280,8 +280,8 @@ function generateFounderFeedbackDoc() {
 
                 {/* Limitation 4 */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-[#4D1979] font-bold text-base mb-1">
-                    <span className="w-6 h-6 rounded-full bg-[#F3EBFA] flex items-center justify-center text-xs">4</span>
+                  <div className="flex items-center gap-2 text-modal-header font-bold text-base mb-1">
+                    <span className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center text-xs">4</span>
                     Apps Script Iframe Sandboxing
                   </div>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -291,8 +291,8 @@ function generateFounderFeedbackDoc() {
               </div>
 
               {/* Hybrid recommendation */}
-              <div className="bg-[#F3EBFA] border border-[#deb7ff] rounded-xl p-5">
-                <h5 className="font-bold text-[#4D1979] text-base mb-1">
+              <div className="bg-primary-light border border-primary-border rounded-xl p-5">
+                <h5 className="font-bold text-modal-header text-base mb-1">
                   The Best-of-Both Solution: Custom Frontend + Google Workspace Backbone
                 </h5>
                 <p className="text-sm text-slate-700 leading-relaxed">
@@ -315,7 +315,7 @@ function generateFounderFeedbackDoc() {
                 </div>
                 <button
                   onClick={handleCopyCode}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#4D1979] text-white text-xs font-bold hover:bg-[#34005B] transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-modal-header text-white text-xs font-bold hover:bg-modal-header-hover transition-colors cursor-pointer"
                 >
                   {copied ? (
                     <>
@@ -349,7 +349,7 @@ function generateFounderFeedbackDoc() {
 
                 <button
                   onClick={generateSheetsCSV}
-                  className="inline-flex items-center gap-2 bg-[#1E7E34] hover:bg-[#166527] text-white font-bold text-sm px-5 py-3 rounded-xl shadow-sm transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 bg-status-success-dark hover:bg-emerald-800 text-white font-bold text-sm px-5 py-3 rounded-xl shadow-sm transition-all cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
                   <span>Download Google Sheets CSV ({company.name})</span>

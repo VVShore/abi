@@ -14,7 +14,7 @@ const EvaluationMainContent: React.FC = () => {
   const { activeScreen } = useEvaluation();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-[#1E293B]">
+    <div className="min-h-screen flex flex-col bg-canvas-subtle text-text-body">
       {/* Top Banner Navigation Header */}
       <Header />
 
@@ -34,7 +34,7 @@ const EvaluationMainContent: React.FC = () => {
               href="https://sites.austincc.edu/incubator/"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-extrabold text-[#431A4D] hover:text-[#78BE20] transition-colors"
+              className="font-extrabold text-primary hover:text-accent transition-colors"
             >
               ACC Bioscience Incubator (ABI)
             </a>
