@@ -78,7 +78,7 @@ export const Header: React.FC = () => {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">description</span>
-            Committee Highlights and Key Takeaways
+            Committee Insights
           </button>
 
           <button
@@ -90,7 +90,7 @@ export const Header: React.FC = () => {
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">groups</span>
-            Committee Summary
+            Feedback Summary
           </button>
         </nav>
 
@@ -103,7 +103,7 @@ export const Header: React.FC = () => {
                 setShowCompanyDropdown(!showCompanyDropdown);
                 setShowReviewerDropdown(false);
               }}
-              className="flex items-center gap-2 bg-accent-light hover:bg-emerald-100 border border-accent-border px-3 py-1.5 rounded-xl transition-all cursor-pointer text-left shadow-2xs"
+              className="flex items-center gap-2 bg-status-success-light hover:bg-prototype-detail-1 border border-accent/40 px-3 py-1.5 rounded-xl transition-all cursor-pointer text-left shadow-2xs"
               title="Select or edit applicant company"
             >
               <Building2 className="w-4 h-4 text-primary" />
@@ -152,7 +152,7 @@ export const Header: React.FC = () => {
                       }}
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
                         c.id === activeCompanyId
-                          ? 'bg-accent-light text-primary font-bold border border-accent-border'
+                          ? 'bg-status-success-light text-primary font-bold border border-accent/40'
                           : 'text-slate-700 hover:bg-slate-50 font-medium'
                       }`}
                     >
@@ -232,7 +232,7 @@ export const Header: React.FC = () => {
                       }}
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
                         rev.id === activeReviewerId
-                          ? 'bg-accent-light text-primary font-bold border border-accent/30'
+                          ? 'bg-status-success-light text-primary font-bold border border-accent/30'
                           : 'text-slate-700 hover:bg-slate-50 font-medium'
                       }`}
                     >
@@ -332,7 +332,7 @@ export const Header: React.FC = () => {
               : 'text-slate-600 hover:bg-white'
           }`}
         >
-          Committee Highlights
+          Committee Insights
         </button>
         <button
           onClick={() => setActiveScreen('committee')}
@@ -342,7 +342,7 @@ export const Header: React.FC = () => {
               : 'text-slate-600 hover:bg-white'
           }`}
         >
-          Committee Summary
+          Feedback Summary
         </button>
       </div>
     </header>

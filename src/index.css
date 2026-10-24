@@ -92,3 +92,11 @@
     border-color: #cbd5e1 !important;
   }
 }
+
+@theme {
+  /* Exact colors retained from the user-tested prototype export. */
+  --color-prototype-detail-1: #e5f5d6;
+  --color-prototype-detail-2: #0a66c2;
+  --color-prototype-detail-3: #1e6b24;
+  --color-prototype-detail-4: #6b3fa0;
+}
