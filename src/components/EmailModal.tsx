@@ -29,10 +29,10 @@ export const EmailModal: React.FC = () => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border-2 border-slate-200 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-[#4D1979] text-white p-5 flex items-center justify-between">
+        <div className="bg-modal-header text-white p-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-              <Mail className="w-5 h-5 text-[#F0B323]" />
+              <Mail className="w-5 h-5 text-notice" />
             </div>
             <div>
               <h3 className="text-xl font-bold">Email Report to Founders</h3>
@@ -59,7 +59,7 @@ export const EmailModal: React.FC = () => {
               type="email"
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4D1979] font-medium"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-modal-header font-medium"
             />
           </div>
 
@@ -71,14 +71,14 @@ export const EmailModal: React.FC = () => {
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#4D1979] font-medium"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-modal-header font-medium"
             />
           </div>
 
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
             <div className="flex items-center justify-between text-xs text-slate-500 font-bold uppercase tracking-wide border-b border-slate-200 pb-2">
               <span>Attached Documents &amp; Metrics</span>
-              <span className="text-[#2e7d32]">Exceeds Bar (3.50)</span>
+              <span className="text-status-success-dark">Exceeds Bar (3.50)</span>
             </div>
 
             <div className="text-sm space-y-1.5 text-slate-700">
@@ -87,7 +87,7 @@ export const EmailModal: React.FC = () => {
               </p>
               <p>
                 <strong>Decision:</strong>{' '}
-                <span className="text-[#2e7d32] font-bold">
+                <span className="text-status-success-dark font-bold">
                   Accepted for Admission (Score: {committeeMatrix.categoryAverages.total.toFixed(1)} / 5.0)
                 </span>
               </p>
@@ -113,7 +113,7 @@ export const EmailModal: React.FC = () => {
           <button
             onClick={handleSend}
             disabled={isSending}
-            className="inline-flex items-center gap-2 bg-[#F0B323] hover:bg-[#e0a418] text-[#2c1e00] font-bold text-sm px-6 py-2.5 rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 bg-notice hover:bg-notice-hover text-notice-dark font-bold text-sm px-6 py-2.5 rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
           >
             {isSending ? (
               <>

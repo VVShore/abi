@@ -13,3 +13,6 @@ coverage/
 *.csv
 *.xlsm
 *.ods
+
+*storybook.log
+storybook-static

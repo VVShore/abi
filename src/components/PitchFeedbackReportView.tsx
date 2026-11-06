@@ -3,13 +3,9 @@ import { useEvaluation } from '../context/EvaluationContext';
 import {
   ChevronUp,
   ChevronDown,
-  AlertCircle,
-  MessageSquareQuote,
   Printer,
   Mail,
-  Filter,
   Sparkles,
-  CheckCircle2,
   Users,
   TrendingUp,
   FlaskConical,
@@ -40,8 +36,8 @@ interface VerbatimQuote {
 
 interface ConsensusTheme {
   id: string;
-  categoryTag: string;
-  alignmentBadge: string;
+  reviewerLabel: string;
+  sentiment: 'positive' | 'concern';
   title: string;
   summary: string;
   quotes: VerbatimQuote[];
@@ -54,6 +50,13 @@ interface GapItem {
   quote: string;
   category: 'Team Competency' | 'Risk & Commercial';
   subCriterion: string;
+}
+
+interface AreaToAddressTopic {
+  id: string;
+  title: string;
+  summary: string;
+  items: GapItem[];
 }
 
 interface TopicComment {
@@ -77,16 +80,21 @@ export const PitchFeedbackReportView: React.FC = () => {
   // Section 1 state: show/hide evaluator pills or full matrix
   const [showDistributionPills, setShowDistributionPills] = useState(true);
 
-  // Section 2 state: expanded theme cards (first 2 expanded by default to match PDF screenshot)
+  // Section 2 state: all theme quotes collapsed by default
   const [expandedThemes, setExpandedThemes] = useState<Record<string, boolean>>({
-    theme_coachable: true,
-    theme_facility: true,
+    theme_coachable: false,
+    theme_facility: false,
     theme_hardware: false,
     theme_staffing: false,
   });
 
-  // Section 3 state: Filter Category for Identified Gaps
-  const [gapCategoryFilter, setGapCategoryFilter] = useState<string>('ALL');
+  // Section 3 state: all 4 Areas to Address topic accordions collapsed by default
+  const [expandedGapTopics, setExpandedGapTopics] = useState<Record<string, boolean>>({
+    gap_topic_staffing: false,
+    gap_topic_regulatory: false,
+    gap_topic_ip: false,
+    gap_topic_funding: false,
+  });
 
   // Section 4 state: Multi-select topics (all 4 selected by default as in Page 4 screenshot)
   const [selectedTopics, setSelectedTopics] = useState<string[]>([
@@ -156,15 +164,15 @@ export const PitchFeedbackReportView: React.FC = () => {
     },
   ];
 
-  // 2. Consensus Themes & Full Verbatim Key Takeaways Data (Page 2 of PDF)
+  // 2. What Reviewers Noticed Data
   const consensusThemes: ConsensusTheme[] = [
     {
       id: 'theme_coachable',
-      categoryTag: 'FOUNDER DEMEANOR',
-      alignmentBadge: '3 Reviewers Strongly Aligned',
-      title: 'Receptive to Training & Coachable',
+      reviewerLabel: '3 reviewers',
+      sentiment: 'positive',
+      title: 'Open to Coaching',
       summary:
-        'Universal observation that Dr. Marcel demonstrates humility, acknowledges technical knowledge gaps, and actively invites committee guidance.',
+        'Reviewers described the founder as receptive to feedback and training.',
       quotes: [
         {
           quote:
@@ -188,11 +196,11 @@ export const PitchFeedbackReportView: React.FC = () => {
     },
     {
       id: 'theme_facility',
-      categoryTag: 'FACILITY ALIGNMENT',
-      alignmentBadge: 'All 6 Evaluators Agreed',
-      title: 'Exact Fit for ABI Equipment & Facilities',
+      reviewerLabel: 'All reviewers',
+      sentiment: 'positive',
+      title: 'Strong Facility Fit',
       summary:
-        "Neoneuron's scientific protocols directly leverage ACC Highland's core assets (BSL-2 cell culture, analytical flow cytometry, -80°C biobanking) without requiring any capital retrofits.",
+        'The proposed work fits ACC Highland’s existing equipment and facilities.',
       quotes: [
         {
           quote:
@@ -216,11 +224,11 @@ export const PitchFeedbackReportView: React.FC = () => {
     },
     {
       id: 'theme_hardware',
-      categoryTag: 'VALUE PROPOSITION NOVELTY',
-      alignmentBadge: '4 of 6 Evaluators Highlighted',
-      title: 'Hardware Delivery Device is Core Commercial Driver',
+      reviewerLabel: '4 of 6 reviewers',
+      sentiment: 'positive',
+      title: 'Device Drives Commercial Value',
       summary:
-        'The committee distinctly separated the physical micro-delivery injection device as the high-value defensible asset, noting it has clearer commercial differentiation than early cellular lines.',
+        'Reviewers saw the delivery device as the strongest commercial differentiator.',
       quotes: [
         {
           quote:
@@ -250,11 +258,11 @@ export const PitchFeedbackReportView: React.FC = () => {
     },
     {
       id: 'theme_staffing',
-      categoryTag: 'PERSONNEL VULNERABILITY',
-      alignmentBadge: '4 of 6 Evaluators Noted',
-      title: 'Lab Staffing & Solo Founder Bottleneck',
+      reviewerLabel: '4 of 6 reviewers',
+      sentiment: 'concern',
+      title: 'Staffing and Founder Capacity',
       summary:
-        'Praise for scientific acumen was counterbalanced by unanimous concern that a solo founder cannot simultaneously run wet lab experiments, maintain biohazard protocols, and raise institutional capital.',
+        'Reviewers raised concerns about lab staffing and reliance on one founder.',
       quotes: [
         {
           quote:
@@ -284,78 +292,110 @@ export const PitchFeedbackReportView: React.FC = () => {
     },
   ];
 
-  // 3. Identified Gaps & Low Scores (Rating 1 or 2 Verbatim Quotes) Data (Page 3 of PDF)
-  const gapItems: GapItem[] = [
+  // 3. Areas to Address Topic Groups (Single-Column Accordion Data)
+  const areasToAddressTopics: AreaToAddressTopic[] = [
     {
-      id: 'gap_1',
-      reviewer: 'Jesper Marklund',
-      score: 2,
-      quote:
-        "This technology is far from validation. An investor would hesitate. He'd need to hire dedicated lab staff immediately; Marcel cannot operate wet lab equipment alone.",
-      category: 'Team Competency',
-      subCriterion: 'Operational Execution & Staffing',
+      id: 'gap_topic_staffing',
+      title: 'Lab Staffing and Founder Capacity',
+      summary:
+        'Reviewers raised concerns about dedicated lab staffing and the founder’s capacity to operate the lab.',
+      items: [
+        {
+          id: 'gap_1',
+          reviewer: 'Jesper Marklund',
+          score: 2,
+          quote:
+            "This technology is far from validation. An investor would hesitate. He'd need to hire dedicated lab staff immediately; Marcel cannot operate wet lab equipment alone.",
+          category: 'Team Competency',
+          subCriterion: 'Operational Execution & Staffing',
+        },
+      ],
     },
     {
-      id: 'gap_2',
-      reviewer: 'Erin Overstreet',
-      score: 2,
-      quote:
-        'Unclear regulatory clearance pathway. No iPS-derived cell technology like this has made it through FDA review yet. Two potentially diverging customers: cells vs device.',
-      category: 'Risk & Commercial',
-      subCriterion: 'FDA Regulatory Classification',
+      id: 'gap_topic_regulatory',
+      title: 'Regulatory Pathway',
+      summary:
+        'Reviewers flagged uncertainty about the applicable regulatory pathway and the device-versus-drug classification.',
+      items: [
+        {
+          id: 'gap_2',
+          reviewer: 'Erin Overstreet',
+          score: 2,
+          quote:
+            'Unclear regulatory clearance pathway. No iPS-derived cell technology like this has made it through FDA review yet. Two potentially diverging customers: cells vs device.',
+          category: 'Risk & Commercial',
+          subCriterion: 'FDA Regulatory Classification',
+        },
+        {
+          id: 'gap_3',
+          reviewer: 'Kevin Smith',
+          score: 2,
+          quote:
+            'Regulatory strategy is essentially absent; assumes simple 510(k) without factoring biological delivery.',
+          category: 'Risk & Commercial',
+          subCriterion: 'FDA Regulatory Classification',
+        },
+        {
+          id: 'gap_4',
+          reviewer: 'Jesper Marklund',
+          score: 2,
+          quote:
+            'Device vs drug regulatory boundary must be settled with FDA advisors.',
+          category: 'Risk & Commercial',
+          subCriterion: 'FDA Regulatory Classification',
+        },
+      ],
     },
     {
-      id: 'gap_3',
-      reviewer: 'Kevin Smith',
-      score: 2,
-      quote:
-        'Regulatory strategy is essentially absent; assumes simple 510(k) without factoring biological delivery.',
-      category: 'Risk & Commercial',
-      subCriterion: 'FDA Regulatory Classification',
+      id: 'gap_topic_ip',
+      title: 'Intellectual Property and Freedom to Operate',
+      summary:
+        'Reviewers questioned patent coverage, patent status, and freedom to operate.',
+      items: [
+        {
+          id: 'gap_5',
+          reviewer: 'Erin Overstreet',
+          score: 2,
+          quote:
+            'Ambiguity on whether legacy patents cover combination delivery mechanisms.',
+          category: 'Risk & Commercial',
+          subCriterion: 'IP & Patent Freedom to Operate',
+        },
+        {
+          id: 'gap_6',
+          reviewer: 'Kevin Smith',
+          score: 2,
+          quote:
+            'Far from commercial readiness. Patent portfolio status is vague and several foundational patents may already be expired. Freedom to operate is untested.',
+          category: 'Risk & Commercial',
+          subCriterion: 'IP & Patent Freedom to Operate',
+        },
+        {
+          id: 'gap_7',
+          reviewer: 'Jesper Marklund',
+          score: 2,
+          quote:
+            'Prior art in micro-infusion delivery is dense; FTO opinion is mandatory.',
+          category: 'Risk & Commercial',
+          subCriterion: 'IP & Patent Freedom to Operate',
+        },
+      ],
     },
     {
-      id: 'gap_4',
-      reviewer: 'Jesper Marklund',
-      score: 2,
-      quote:
-        'Device vs drug regulatory boundary must be settled with FDA advisors.',
-      category: 'Risk & Commercial',
-      subCriterion: 'FDA Regulatory Classification',
-    },
-    {
-      id: 'gap_5',
-      reviewer: 'Erin Overstreet',
-      score: 2,
-      quote:
-        'Ambiguity on whether legacy patents cover combination delivery mechanisms.',
-      category: 'Risk & Commercial',
-      subCriterion: 'IP & Patent Freedom to Operate',
-    },
-    {
-      id: 'gap_6',
-      reviewer: 'Kevin Smith',
-      score: 2,
-      quote:
-        'Far from commercial readiness. Patent portfolio status is vague and several foundational patents may already be expired. Freedom to operate is untested.',
-      category: 'Risk & Commercial',
-      subCriterion: 'IP & Patent Freedom to Operate',
-    },
-    {
-      id: 'gap_7',
-      reviewer: 'Jesper Marklund',
-      score: 2,
-      quote:
-        'Prior art in micro-infusion delivery is dense; FTO opinion is mandatory.',
-      category: 'Risk & Commercial',
-      subCriterion: 'IP & Patent Freedom to Operate',
-    },
-    {
-      id: 'gap_8',
-      reviewer: 'Kevin Smith',
-      score: 2,
-      quote: 'Very vulnerable without closed equity co-investors.',
-      category: 'Risk & Commercial',
-      subCriterion: 'Runway & Commercialization',
+      id: 'gap_topic_funding',
+      title: 'Funding and Commercial Readiness',
+      summary:
+        'Reviewer feedback highlighted vulnerability around securing equity co-investors.',
+      items: [
+        {
+          id: 'gap_8',
+          reviewer: 'Kevin Smith',
+          score: 2,
+          quote: 'Very vulnerable without closed equity co-investors.',
+          category: 'Risk & Commercial',
+          subCriterion: 'Runway & Commercialization',
+        },
+      ],
     },
   ];
 
@@ -434,13 +474,8 @@ export const PitchFeedbackReportView: React.FC = () => {
     setExpandedThemes((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleToggleAllQuotes = () => {
-    const allExpanded = consensusThemes.every((t) => expandedThemes[t.id]);
-    const nextState: Record<string, boolean> = {};
-    consensusThemes.forEach((t) => {
-      nextState[t.id] = !allExpanded;
-    });
-    setExpandedThemes(nextState);
+  const toggleGapTopic = (id: string) => {
+    setExpandedGapTopics((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const toggleTopicSelection = (topicId: string) => {
@@ -453,13 +488,8 @@ export const PitchFeedbackReportView: React.FC = () => {
     });
   };
 
-  const filteredGaps =
-    gapCategoryFilter === 'ALL'
-      ? gapItems
-      : gapItems.filter((g) => g.category === gapCategoryFilter);
-
   const renderTopicIcon = (type: TopicGroup['icon'], isLight = false) => {
-    const cls = `w-4 h-4 ${isLight ? 'text-white' : 'text-[#431A4D]'}`;
+    const cls = `w-4 h-4 ${isLight ? 'text-white' : 'text-primary'}`;
     switch (type) {
       case 'coachability':
         return <Users className={cls} />;
@@ -473,19 +503,19 @@ export const PitchFeedbackReportView: React.FC = () => {
   };
 
   return (
-    <div className="w-full pt-6 sm:pt-8 pb-24 bg-[#F8FAFD] min-h-screen text-slate-900">
+    <div className="w-full pt-6 sm:pt-8 pb-24 bg-canvas min-h-screen text-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 flex flex-col gap-10">
         {/* ===================================================================== */}
         {/* PAGE HEADER BANNER (Webpage Theme)                                    */}
         {/* ===================================================================== */}
         <section className="bg-white border-2 border-slate-200/90 rounded-3xl shadow-sm p-6 sm:p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#431A4D] via-[#78BE20] to-[#431A4D]" />
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-accent to-primary" />
 
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
               <div className="flex items-center gap-2.5 flex-wrap mb-2">
-                <span className="bg-[#431A4D] text-white font-bold text-xs px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#78BE20]" />
+                <span className="bg-primary text-white font-bold text-xs px-3.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-accent" />
                   Scorecard Synthesizer
                 </span>
                 <span className="text-slate-500 text-xs sm:text-sm font-semibold">
@@ -494,7 +524,7 @@ export const PitchFeedbackReportView: React.FC = () => {
               </div>
 
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-                Committee Highlights and Key Takeaways
+                Committee Insights
               </h1>
               <p className="text-sm sm:text-base text-slate-600 mt-1.5 max-w-3xl leading-relaxed">
                 One central place for Nancy and steering committee members to review category score distributions,
@@ -506,7 +536,7 @@ export const PitchFeedbackReportView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="min-h-[44px] px-4 py-2.5 rounded-2xl border-2 border-slate-300 hover:border-[#431A4D] bg-white text-slate-800 hover:text-[#431A4D] font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer"
+                className="min-h-[44px] px-4 py-2.5 rounded-2xl border-2 border-slate-300 hover:border-primary bg-white text-slate-800 hover:text-primary font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer"
               >
                 <Printer className="w-4 h-4 text-slate-600" />
                 <span>Print View</span>
@@ -515,9 +545,9 @@ export const PitchFeedbackReportView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsEmailModalOpen(true)}
-                className="min-h-[44px] px-5 py-2.5 rounded-2xl bg-[#431A4D] hover:bg-[#34143D] text-white font-extrabold text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                className="min-h-[44px] px-5 py-2.5 rounded-2xl bg-primary hover:bg-primary-hover text-white font-extrabold text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer"
               >
-                <Mail className="w-4 h-4 text-[#78BE20]" />
+                <Mail className="w-4 h-4 text-accent" />
                 <span>Share Takeaways</span>
               </button>
             </div>
@@ -534,7 +564,7 @@ export const PitchFeedbackReportView: React.FC = () => {
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                   Category Averages &amp; Reviewer Spread Distribution
                 </h2>
-                <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-[#F3EBFA] text-[#431A4D] border border-[#431A4D]/20">
+                <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-primary-light text-primary border border-primary/20">
                   4 Core Dimensions
                 </span>
               </div>
@@ -568,10 +598,10 @@ export const PitchFeedbackReportView: React.FC = () => {
                   key={card.id}
                   className={`rounded-2xl p-5 flex flex-col justify-between transition-all ${
                     isRiskCard
-                      ? 'bg-[#FFFDF7] border-2 border-amber-300/90 shadow-2xs'
+                      ? 'bg-status-warning-light border-2 border-amber-300/90 shadow-2xs'
                       : isHighestCard
-                      ? 'bg-[#F8FAFD] border-2 border-[#78BE20]/60 shadow-2xs'
-                      : 'bg-[#F8FAFD] border border-slate-200/90'
+                      ? 'bg-canvas border-2 border-accent/60 shadow-2xs'
+                      : 'bg-canvas border border-slate-200/90'
                   }`}
                 >
                   <div>
@@ -600,7 +630,7 @@ export const PitchFeedbackReportView: React.FC = () => {
                           isRiskCard
                             ? 'text-amber-600'
                             : isHighestCard
-                            ? 'text-[#008A2E]'
+                            ? 'text-status-success-dark'
                             : 'text-slate-900'
                         }`}
                       >
@@ -641,103 +671,201 @@ export const PitchFeedbackReportView: React.FC = () => {
         </section>
 
         {/* ===================================================================== */}
-        {/* 2. CONSENSUS THEMES & FULL VERBATIM KEY TAKEAWAYS (Page 2 of PDF)     */}
+        {/* 2. WHAT REVIEWERS NOTICED                                             */}
         {/* ===================================================================== */}
         <section className="bg-white border-2 border-slate-200/90 rounded-3xl shadow-sm p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
-            <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <span className="w-7 h-7 rounded-lg bg-[#F2F9EC] text-[#008A2E] border border-[#78BE20]/40 flex items-center justify-center font-black text-sm">
-                  <MessageSquareQuote className="w-4 h-4" />
-                </span>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Consensus Themes &amp; Full Verbatim Key Takeaways
-                </h2>
-                <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-[#F2F9EC] text-[#006100] border border-[#78BE20]/40">
-                  Bordered in ABI Green
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                Clustered qualitative takeaways. Click any theme card to expand and review the exact, unedited verbatim quotes with evaluator names attached.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleToggleAllQuotes}
-              className="self-start sm:self-center px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold text-slate-700 transition-colors cursor-pointer shrink-0"
-            >
-              Toggle All Quotes
-            </button>
+          <div className="pb-5 border-b border-slate-200">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              What Reviewers Noticed
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+              Common themes across reviewer feedback. Open a theme to see supporting quotes.
+            </p>
           </div>
 
-          {/* 2x2 Grid of Expandable Theme Cards Bordered in ABI Green */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6 items-start">
+          {/* 2-Column Desktop / 1-Column Mobile Grid of Theme Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-7 items-start">
             {consensusThemes.map((theme) => {
               const isExpanded = Boolean(expandedThemes[theme.id]);
+              const isPositive = theme.sentiment === 'positive';
 
               return (
                 <div
                   key={theme.id}
-                  className="bg-white rounded-2xl border-2 border-[#78BE20] shadow-xs overflow-hidden transition-all"
+                  className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 transition-colors hover:border-slate-300"
                 >
-                  {/* Theme Card Header & Summary */}
-                  <div className="p-5 sm:p-6">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                        {theme.categoryTag}
-                      </span>
-                      <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-md bg-[#F2F9EC] text-[#006100] border border-[#78BE20]/40">
-                        {theme.alignmentBadge}
-                      </span>
-                    </div>
-
-                    <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                  {/* Title & Subtle Reviewer-Count Label */}
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
                       {theme.title}
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
-                      {theme.summary}
-                    </p>
+                    <span
+                      className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full shrink-0 ${
+                        isPositive
+                          ? 'bg-status-success-light text-prototype-detail-3 border border-accent/30'
+                          : 'bg-slate-100 text-slate-600 border border-slate-200'
+                      }`}
+                    >
+                      {isPositive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                      )}
+                      {theme.reviewerLabel}
+                    </span>
                   </div>
 
-                  {/* Expand / Collapse Bar */}
-                  <button
-                    type="button"
-                    onClick={() => toggleThemeCard(theme.id)}
-                    className="w-full px-5 sm:px-6 py-3 bg-[#F8FAFD] hover:bg-[#F2F9EC]/60 border-t border-slate-200/80 flex items-center justify-between text-xs font-extrabold text-slate-800 transition-colors cursor-pointer"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="text-[#78BE20] font-serif text-base leading-none">&ldquo;&rdquo;</span>
-                      <span>
-                        {isExpanded ? 'Hide Full Verbatim Quotes' : 'Expand Exact Verbatim Quotes'}
-                      </span>
-                    </span>
-                    {isExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-slate-500" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-slate-500" />
-                    )}
-                  </button>
+                  {/* One-Sentence Summary */}
+                  <p className="text-sm sm:text-base text-slate-600 mt-2.5 leading-relaxed">
+                    {theme.summary}
+                  </p>
 
-                  {/* Expanded Verbatim Quotes List */}
+                  {/* Accessible Quote Reveal Control */}
+                  <div className="mt-5">
+                    <button
+                      type="button"
+                      onClick={() => toggleThemeCard(theme.id)}
+                      aria-expanded={isExpanded}
+                      aria-controls={`theme-quotes-${theme.id}`}
+                      className="inline-flex items-center gap-1.5 py-1.5 px-2.5 -ml-2.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-700 hover:text-primary hover:bg-slate-50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    >
+                      <span>
+                        {isExpanded
+                          ? 'Hide quotes'
+                          : `View ${theme.quotes.length} reviewer quotes`}
+                      </span>
+                      {isExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-slate-500 transition-transform" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-slate-500 transition-transform" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Supporting Quotes Beneath Summary */}
                   {isExpanded && (
-                    <div className="p-5 sm:p-6 pt-3 bg-[#F8FAFD]/60 border-t border-slate-100 space-y-3">
+                    <div
+                      id={`theme-quotes-${theme.id}`}
+                      className="mt-4 pt-5 border-t border-slate-100 space-y-4"
+                    >
                       {theme.quotes.map((q, qIdx) => (
-                        <div
+                        <blockquote
                           key={qIdx}
-                          className="bg-white rounded-xl p-4 border-l-4 border-l-[#78BE20] border border-slate-200/80 shadow-2xs"
+                          className="pl-4 border-l-2 border-slate-200 space-y-1.5"
                         >
-                          <p className="text-xs sm:text-sm italic text-slate-800 leading-relaxed">
+                          <p className="text-sm text-slate-700 leading-relaxed">
                             &ldquo;{q.quote}&rdquo;
                           </p>
-                          <div className="mt-2.5 flex items-center justify-between text-xs">
-                            <span className="font-extrabold text-slate-900">
-                              — {q.author}
+                          <footer className="text-xs flex items-center gap-2">
+                            <span className="font-semibold text-slate-900">
+                              {q.author}
                             </span>
-                            <span className="text-[11px] font-medium text-slate-400">
-                              {q.role}
-                            </span>
-                          </div>
+                            <span className="text-slate-300">·</span>
+                            <span className="text-slate-500">{q.role}</span>
+                          </footer>
+                        </blockquote>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ===================================================================== */}
+        {/* 3. AREAS TO ADDRESS                                                   */}
+        {/* ===================================================================== */}
+        <section className="bg-white border-2 border-slate-200/90 rounded-3xl shadow-sm p-6 sm:p-8">
+          <div className="pb-5 border-b border-slate-200">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              Areas to Address
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
+              Concerns flagged by reviewers who gave a score of 1 or 2. Open a topic to see their feedback.
+            </p>
+          </div>
+
+          {/* Single-Column Accordion of 4 Topic Groups */}
+          <div className="mt-7 space-y-4">
+            {areasToAddressTopics.map((topic) => {
+              const isExpanded = Boolean(expandedGapTopics[topic.id]);
+              const count = topic.items.length;
+
+              return (
+                <div
+                  key={topic.id}
+                  className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 transition-colors hover:border-slate-300"
+                >
+                  {/* Title & Subtle Feedback Count */}
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+                      {topic.title}
+                    </h3>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-50/80 text-amber-900 border border-amber-200/80 shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      {count === 1 ? '1 comment' : `${count} comments`}
+                    </span>
+                  </div>
+
+                  {/* One-Sentence Summary */}
+                  <p className="text-sm sm:text-base text-slate-600 mt-2.5 leading-relaxed">
+                    {topic.summary}
+                  </p>
+
+                  {/* Accessible Accordion Control */}
+                  <div className="mt-5">
+                    <button
+                      type="button"
+                      onClick={() => toggleGapTopic(topic.id)}
+                      aria-expanded={isExpanded}
+                      aria-controls={`gap-topic-items-${topic.id}`}
+                      className="inline-flex items-center gap-1.5 py-1.5 px-2.5 -ml-2.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-700 hover:text-primary hover:bg-slate-50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    >
+                      <span>
+                        {isExpanded
+                          ? `Hide ${count === 1 ? 'reviewer comment' : 'reviewer comments'}`
+                          : `View ${count} ${count === 1 ? 'reviewer comment' : 'reviewer comments'}`}
+                      </span>
+                      {isExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-slate-500 transition-transform" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-slate-500 transition-transform" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Supporting Reviewer Feedback */}
+                  {isExpanded && (
+                    <div
+                      id={`gap-topic-items-${topic.id}`}
+                      className="mt-4 pt-5 border-t border-slate-100 divide-y divide-slate-100"
+                    >
+                      {topic.items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="py-4 first:pt-0 last:pb-0"
+                        >
+                          <blockquote className="pl-4 border-l-2 border-amber-300/90 space-y-2">
+                            <p className="text-sm text-slate-700 leading-relaxed">
+                              &ldquo;{item.quote}&rdquo;
+                            </p>
+                            <footer className="text-xs flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-500">
+                              <span className="font-semibold text-slate-900">
+                                {item.reviewer}
+                              </span>
+                              <span className="text-slate-300">·</span>
+                              <span className="text-slate-500">
+                                Rating: {item.score} of 5
+                              </span>
+                              <span className="text-slate-300">·</span>
+                              <span className="text-slate-500">
+                                {item.category}
+                              </span>
+                              <span className="text-slate-300">·</span>
+                              <span className="text-slate-500">
+                                {item.subCriterion}
+                              </span>
+                            </footer>
+                          </blockquote>
                         </div>
                       ))}
                     </div>
@@ -749,95 +877,11 @@ export const PitchFeedbackReportView: React.FC = () => {
         </section>
 
         {/* ===================================================================== */}
-        {/* 3. IDENTIFIED GAPS & LOW SCORES (Rating 1 or 2 Verbatim Quotes)       */}
-        {/* ===================================================================== */}
-        <section className="bg-white border-2 border-[#333333] rounded-3xl shadow-sm p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200">
-            <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Identified Gaps &amp; Low Scores (Rating 1 or 2 Verbatim Quotes)
-                </h2>
-                <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-[#333333] text-white">
-                  Bordered in #333333
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                Automatically filtered entries where an evaluator assigned a 1 or 2 score. These items form the mandatory contractual milestones for conditional entry.
-              </p>
-            </div>
-
-            {/* Category Filter Dropdown */}
-            <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-              <label
-                htmlFor="gap-category-filter"
-                className="text-xs font-bold text-slate-500 flex items-center gap-1"
-              >
-                <Filter className="w-3.5 h-3.5" />
-                <span>Filter Category:</span>
-              </label>
-              <select
-                id="gap-category-filter"
-                value={gapCategoryFilter}
-                onChange={(e) => setGapCategoryFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-800 focus:outline-none focus:border-[#431A4D] cursor-pointer"
-              >
-                <option value="ALL">All Gaps ({gapItems.length})</option>
-                <option value="Team Competency">
-                  Team Competency ({gapItems.filter((g) => g.category === 'Team Competency').length})
-                </option>
-                <option value="Risk & Commercial">
-                  Risk &amp; Commercial ({gapItems.filter((g) => g.category === 'Risk & Commercial').length})
-                </option>
-              </select>
-            </div>
-          </div>
-
-          {/* 3-Column Grid of Low Score Gap Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-            {filteredGaps.map((gap) => (
-              <div
-                key={gap.id}
-                className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs flex flex-col justify-between hover:border-slate-300 transition-colors"
-              >
-                <div>
-                  {/* Reviewer Name & Red Score Badge */}
-                  <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                    <span className="font-extrabold text-sm text-slate-900">
-                      {gap.reviewer}
-                    </span>
-                    <span className="text-xs font-black px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 font-mono">
-                      Score: {gap.score}
-                    </span>
-                  </div>
-
-                  {/* Verbatim Quote */}
-                  <div className="my-4 pl-3 border-l-2 border-slate-300">
-                    <p className="text-xs sm:text-[13px] italic text-slate-700 leading-relaxed">
-                      &ldquo;{gap.quote}&rdquo;
-                    </p>
-                  </div>
-                </div>
-
-                {/* Card Footer: Category & Sub-Criterion */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-[11px]">
-                  <span className="font-bold text-slate-600">{gap.category}</span>
-                  <span className="text-slate-500 bg-slate-100 px-2 py-0.5 rounded truncate max-w-[180px]">
-                    {gap.subCriterion}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ===================================================================== */}
         {/* 4. REVIEWER COMMENTS BY TOPIC (Page 4 of PDF)                         */}
         {/* ===================================================================== */}
         <section className="bg-white border-2 border-slate-200/90 rounded-3xl shadow-sm p-6 sm:p-8">
           <div className="pb-5 border-b border-slate-200">
-            <h2 className="text-xl sm:text-2xl font-black text-[#141b2b] tracking-tight uppercase">
+            <h2 className="text-xl sm:text-2xl font-black text-text-main tracking-tight uppercase">
               Reviewer Comments by Topic
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
@@ -855,7 +899,7 @@ export const PitchFeedbackReportView: React.FC = () => {
                     onClick={() => toggleTopicSelection(topic.id)}
                     className={`px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-[#6B3FA0] text-white shadow-xs'
+                        ? 'bg-prototype-detail-4 text-white shadow-xs'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
                     }`}
                   >
@@ -873,7 +917,7 @@ export const PitchFeedbackReportView: React.FC = () => {
               .filter((t) => selectedTopics.includes(t.id))
               .map((topic) => (
                 <div key={topic.id} className="space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[#141b2b]">
+                  <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-text-main">
                     {renderTopicIcon(topic.icon, false)}
                     <span>{topic.uppercaseTitle}</span>
                   </div>
@@ -882,10 +926,10 @@ export const PitchFeedbackReportView: React.FC = () => {
                     {topic.comments.map((c, idx) => (
                       <div
                         key={idx}
-                        className="bg-[#F8FAFD] rounded-2xl border border-slate-200/90 p-4 sm:p-5 flex items-start justify-between gap-4"
+                        className="bg-canvas rounded-2xl border border-slate-200/90 p-4 sm:p-5 flex items-start justify-between gap-4"
                       >
                         <div className="flex items-start gap-3.5">
-                          <div className="w-9 h-9 rounded-full bg-[#EFE6F7] text-[#431A4D] flex items-center justify-center font-extrabold text-xs shrink-0 mt-0.5">
+                          <div className="w-9 h-9 rounded-full bg-primary-subtle text-primary flex items-center justify-center font-extrabold text-xs shrink-0 mt-0.5">
                             {c.initials}
                           </div>
                           <div>

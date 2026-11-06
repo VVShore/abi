@@ -95,7 +95,7 @@ export const Header: React.FC = () => {
             onClick={() => setActiveScreen('individual')}
             className={`px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
               activeScreen === 'individual'
-                ? 'bg-[#431A4D] text-white shadow-xs'
+                ? 'bg-primary text-white shadow-xs'
                 : 'text-slate-700 hover:bg-white hover:text-slate-900'
             }`}
           >
@@ -107,24 +107,24 @@ export const Header: React.FC = () => {
             onClick={() => setActiveScreen('report')}
             className={`px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
               activeScreen === 'report'
-                ? 'bg-[#431A4D] text-white shadow-xs'
+                ? 'bg-primary text-white shadow-xs'
                 : 'text-slate-700 hover:bg-white hover:text-slate-900'
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">description</span>
-            Committee Highlights and Key Takeaways
+            Committee Insights
           </button>
 
           <button
             onClick={() => setActiveScreen('committee')}
             className={`px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
               activeScreen === 'committee'
-                ? 'bg-[#431A4D] text-white shadow-xs'
+                ? 'bg-primary text-white shadow-xs'
                 : 'text-slate-700 hover:bg-white hover:text-slate-900'
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">groups</span>
-            Committee Summary
+            Feedback Summary
           </button>
         </nav>
 
@@ -149,16 +149,16 @@ export const Header: React.FC = () => {
                 setShowMeetingDropdown(false);
                 setShowReviewerDropdown(false);
               }}
-              className="flex items-center gap-2 bg-[#F2F9EC] hover:bg-[#E5F5D6] border border-[#78BE20]/40 px-3 py-1.5 rounded-xl transition-all cursor-pointer text-left shadow-2xs"
+              className="flex items-center gap-2 bg-status-success-light hover:bg-prototype-detail-1 border border-accent/40 px-3 py-1.5 rounded-xl transition-all cursor-pointer text-left shadow-2xs"
               title="Select or edit applicant company"
             >
-              <Building2 className="w-4 h-4 text-[#431A4D]" />
+              <Building2 className="w-4 h-4 text-primary" />
               <div>
-                <div className="text-[10px] font-bold text-[#78BE20] uppercase tracking-wider flex items-center gap-1">
+                <div className="text-[10px] font-bold text-accent uppercase tracking-wider flex items-center gap-1">
                   <span>Applicant</span>
-                  <ChevronDown className="w-3 h-3 text-[#78BE20]" />
+                  <ChevronDown className="w-3 h-3 text-accent" />
                 </div>
-                <div className="text-xs font-black text-[#431A4D] leading-tight max-w-[110px] sm:max-w-[130px] truncate">
+                <div className="text-xs font-black text-primary leading-tight max-w-[110px] sm:max-w-[130px] truncate">
                   {company.name}
                 </div>
               </div>
@@ -168,7 +168,7 @@ export const Header: React.FC = () => {
               <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border-2 border-slate-200 p-2 z-50 animate-in fade-in slide-in-from-top-2">
                 <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
                   <div>
-                    <div className="text-xs font-bold uppercase tracking-wider text-[#431A4D]">
+                    <div className="text-xs font-bold uppercase tracking-wider text-primary">
                       Select Company
                     </div>
                     <div className="text-[11px] text-slate-500">
@@ -181,7 +181,7 @@ export const Header: React.FC = () => {
                       setShowCompanyDropdown(false);
                       setIsCompanyModalOpen(true);
                     }}
-                    className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-[#431A4D] transition-colors cursor-pointer"
+                    className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-primary transition-colors cursor-pointer"
                     title="Edit company information"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -198,7 +198,7 @@ export const Header: React.FC = () => {
                       }}
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
                         c.id === activeCompanyId
-                          ? 'bg-[#F2F9EC] text-[#431A4D] font-bold border border-[#78BE20]/40'
+                          ? 'bg-status-success-light text-primary font-bold border border-accent/40'
                           : 'text-slate-700 hover:bg-slate-50 font-medium'
                       }`}
                     >
@@ -211,7 +211,7 @@ export const Header: React.FC = () => {
                         </div>
                       </div>
                       {c.id === activeCompanyId && (
-                        <Check className="w-4 h-4 text-[#78BE20] shrink-0" />
+                        <Check className="w-4 h-4 text-accent shrink-0" />
                       )}
                     </button>
                   ))}
@@ -235,9 +235,9 @@ export const Header: React.FC = () => {
                       setShowCompanyDropdown(false);
                       setIsCompanyModalOpen(true);
                     }}
-                    className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-[#431A4D] hover:bg-[#34143D] text-white text-xs font-bold transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-colors cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5 text-[#78BE20]" />
+                    <Plus className="w-3.5 h-3.5 text-accent" />
                     <span>+ Add New Company</span>
                   </button>
                 </div>
@@ -442,7 +442,7 @@ export const Header: React.FC = () => {
               }}
               className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer text-left"
             >
-              <div className="w-8 h-8 rounded-full bg-[#431A4D] text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shadow-2xs">
                 {currentReviewer.initials}
               </div>
               <div className="hidden sm:block">
@@ -460,7 +460,7 @@ export const Header: React.FC = () => {
             {showReviewerDropdown && (
               <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border-2 border-slate-200 p-2 z-50 animate-in fade-in slide-in-from-top-2">
                 <div className="px-3 py-2 border-b border-slate-100 mb-1">
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#431A4D]">
+                  <div className="text-xs font-bold uppercase tracking-wider text-primary">
                     Active Evaluator
                   </div>
                   <div className="text-[11px] text-slate-500">
@@ -477,12 +477,12 @@ export const Header: React.FC = () => {
                       }}
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
                         rev.id === activeReviewerId
-                          ? 'bg-[#F2F9EC] text-[#431A4D] font-bold border border-[#78BE20]/30'
+                          ? 'bg-status-success-light text-primary font-bold border border-accent/30'
                           : 'text-slate-700 hover:bg-slate-50 font-medium'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 truncate mr-2">
-                        <span className="w-7 h-7 rounded-full bg-[#431A4D] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                        <span className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shrink-0">
                           {rev.initials}
                         </span>
                         <div className="truncate">
@@ -495,7 +495,7 @@ export const Header: React.FC = () => {
                         </div>
                       </div>
                       {rev.id === activeReviewerId && (
-                        <Check className="w-4 h-4 text-[#78BE20] shrink-0" />
+                        <Check className="w-4 h-4 text-accent shrink-0" />
                       )}
                     </button>
                   ))}
@@ -505,7 +505,7 @@ export const Header: React.FC = () => {
                 <div className="pt-2 mt-1 border-t border-slate-100">
                   {isAddingReviewer ? (
                     <form onSubmit={handleAddReviewer} className="p-2 bg-slate-50 rounded-xl space-y-2">
-                      <div className="text-[11px] font-bold text-[#431A4D] uppercase tracking-wider">
+                      <div className="text-[11px] font-bold text-primary uppercase tracking-wider">
                         Add New Reviewer
                       </div>
                       <input
@@ -515,14 +515,14 @@ export const Header: React.FC = () => {
                         placeholder="Reviewer Full Name (e.g. Dr. Alex Vance)"
                         value={newReviewerName}
                         onChange={(e) => setNewReviewerName(e.target.value)}
-                        className="w-full text-xs px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#78BE20]"
+                        className="w-full text-xs px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-accent"
                       />
                       <input
                         type="text"
                         placeholder="Role / Title (e.g. Scientific Advisor)"
                         value={newReviewerTitle}
                         onChange={(e) => setNewReviewerTitle(e.target.value)}
-                        className="w-full text-xs px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#78BE20]"
+                        className="w-full text-xs px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-accent"
                       />
                       <div className="flex items-center gap-1.5 pt-1">
                         <button
@@ -534,7 +534,7 @@ export const Header: React.FC = () => {
                         </button>
                         <button
                           type="submit"
-                          className="flex-1 py-1 text-xs font-bold bg-[#431A4D] text-white hover:bg-[#34143D] rounded-md transition-colors cursor-pointer"
+                          className="flex-1 py-1 text-xs font-bold bg-primary text-white hover:bg-primary-hover rounded-md transition-colors cursor-pointer"
                         >
                           Add Reviewer
                         </button>
@@ -544,9 +544,9 @@ export const Header: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsAddingReviewer(true)}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg hover:bg-slate-100 text-[#431A4D] text-xs font-bold transition-colors cursor-pointer"
+                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg hover:bg-slate-100 text-primary text-xs font-bold transition-colors cursor-pointer"
                     >
-                      <Plus className="w-3.5 h-3.5 text-[#78BE20]" />
+                      <Plus className="w-3.5 h-3.5 text-accent" />
                       <span>+ Add New Reviewer</span>
                     </button>
                   )}
@@ -563,7 +563,7 @@ export const Header: React.FC = () => {
           onClick={() => setActiveScreen('individual')}
           className={`flex-1 min-w-[110px] py-1.5 px-2 rounded-lg text-xs font-bold text-center cursor-pointer ${
             activeScreen === 'individual'
-              ? 'bg-[#431A4D] text-white shadow-2xs'
+              ? 'bg-primary text-white shadow-2xs'
               : 'text-slate-600 hover:bg-white'
           }`}
         >
@@ -573,21 +573,21 @@ export const Header: React.FC = () => {
           onClick={() => setActiveScreen('report')}
           className={`flex-1 min-w-[110px] py-1.5 px-2 rounded-lg text-xs font-bold text-center cursor-pointer ${
             activeScreen === 'report'
-              ? 'bg-[#431A4D] text-white shadow-2xs'
+              ? 'bg-primary text-white shadow-2xs'
               : 'text-slate-600 hover:bg-white'
           }`}
         >
-          Committee Highlights
+          Committee Insights
         </button>
         <button
           onClick={() => setActiveScreen('committee')}
           className={`flex-1 min-w-[110px] py-1.5 px-2 rounded-lg text-xs font-bold text-center cursor-pointer ${
             activeScreen === 'committee'
-              ? 'bg-[#431A4D] text-white shadow-2xs'
+              ? 'bg-primary text-white shadow-2xs'
               : 'text-slate-600 hover:bg-white'
           }`}
         >
-          Committee Summary
+          Feedback Summary
         </button>
       </div>
     </header>
