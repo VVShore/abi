@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev": "vite --port=3000 --host=127.0.0.1",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --port=4173 --host=127.0.0.1",
     "clean": "node -e \"['dist', 'server.js'].forEach(p => require('fs').rmSync(p, { recursive: true, force: true }))\"",
     "lint": "tsc --noEmit"
   },
@@ -33,5 +33,10 @@
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "@google/genai@2.28.0": true,
+    "esbuild@0.28.2": true,
+    "protobufjs@7.6.6": true
   }
 }

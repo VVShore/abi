@@ -1,0 +1,175 @@
+diff --git a/README.md b/README.md
+index f64543c..5814594 100644
+--- a/README.md
++++ b/README.md
+@@ -1,27 +1,59 @@
+-<div align="center">
+-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+-</div>
+-
+ # ACC Bioscience Incubator — Evaluation & Admission Portal
+ 
+ Applicant review scorecard, committee consensus scoreboard, and founder pitch feedback report for the ACC Bioscience Incubator (ABI).
+ 
+-* **View in AI Studio:** [AI Studio Applet](https://ai.studio/apps/cf753c77-44d8-4b3f-979e-2ec8c61709cf)
+ * **Design System Guide:** [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md)
+ * **Tech Stack Overview:** [STACK.md](STACK.md)
+ 
+ ---
+ 
++## Overview
++
++### What this is
++
++The ABI Evaluation & Admission Portal is a web app for ABI staff at Austin Community College. It brings the information about each applicant or resident company into one place, so staff don't have to search across separate spreadsheets, forms and documents. It is being built by the GAPS internship team.
++
++This branch (`mvp/local-company-view`) is the **minimum viable product (MVP)**. It is meant to run on one computer for demonstrations and testing.
++
++### What it does today
++
++* **Companies:** switch between applicant companies, add a company, or edit its basic information.
++* **Meetings:** each company has an *Initial Pitch* and any number of dated *Progress Check-ins*. Each meeting keeps its own reviewer scorecards.
++* **Reviewer scorecards:** each committee member rates a company on Team, Value Proposition, ABI Fit and Risk, and adds comments.
++* **Committee views:** *Committee Summary* combines all reviewers' scores into a scoreboard. *Committee Highlights and Key Takeaways* shows the feedback report layout, currently with sample content.
++* **Application import:** load applicant records from the ABI Form to Lead Responses Excel workbook. The app shows a preview, flags possible duplicates, and asks for confirmation before importing.
++
++### How it works
++
++* **Runs only on your computer.** There is no server, no database and no sign-in. Nothing you enter or import is uploaded.
++* **Data is saved in your web browser** on this computer. It is still there after you close and reopen the browser. Other testers don't see your data, and you don't see theirs.
++* **It starts with three made-up demo companies** (Vayim, BioNanox Diagnostics, Austin Cell Therapeutics), so there is something to look at right away.
++* Built with React, TypeScript, Vite and Tailwind CSS. See [STACK.md](STACK.md) for details.
++
++### Finding your way around
++
++Maximize your browser window so the full header shows.
++
++| Where | What it's for |
++|---|---|
++| Tabs in the header: **Individual Scorecard**, **Committee Highlights and Key Takeaways**, **Committee Summary** | Switch between the three main screens |
++| **Import (.xlsx)** | Import applications from an Excel workbook |
++| **Applicant** | Choose a company, add a new one, or edit its information |
++| **Meeting** | Choose the Initial Pitch or a Progress Check-in, or add a new check-in |
++| **Reviewer** | Choose which committee member you are scoring as, or add a reviewer |
++
++---
++
+ ## Running Locally on Windows
+ 
+-The app runs entirely on your own computer. There is no server, database, or sign-in. All data (companies, meetings, scorecards) is saved in your web browser on this machine.
++You need a Windows 10 or 11 computer, an internet connection for the setup, and Chrome or Edge. Setup takes about 10–15 minutes the first time.
+ 
+-### 1. Install prerequisites (once)
++All commands below go into **PowerShell**. To open it, press the Windows key, type `PowerShell` and press Enter. Copy each command, paste it into PowerShell with `Ctrl+V`, and press Enter.
+ 
+-Open **PowerShell** and run:
++### 1. Install the prerequisites (once per computer)
+ 
+ ```powershell
+-# Allow npm's PowerShell scripts to run for your user account
++# Allow npm's PowerShell scripts to run for your user account (answer Y if asked)
+ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+ 
+ # Node.js LTS (version 22.12 or newer is required) and Git
+@@ -29,28 +61,32 @@ winget install OpenJS.NodeJS.LTS
+ winget install Git.Git
+ ```
+ 
+-Close and reopen PowerShell, then confirm the versions:
++If Windows says `winget` is not recognized, install the two programs from their websites instead, keeping the default options: Node.js LTS from https://nodejs.org and Git from https://git-scm.com/download/win.
++
++**Close PowerShell and open a new window**, so it finds the new programs. Then check:
+ 
+ ```powershell
+-node -v   # must be v22.12.0 or newer
+-npm -v
++node -v   # must show v22.12.0 or newer
+ git --version
+ ```
+ 
+-### 2. Get the code
++### 2. Download the code (once)
++
++This puts the project in a folder called `abi` inside your Documents folder:
+ 
+ ```powershell
++cd $HOME\Documents
+ git clone --branch mvp/local-company-view https://github.com/VVShore/abi.git
+ cd abi
+ ```
+ 
+-### 3. Install dependencies
++### 3. Install the app's dependencies (once, and after each update)
+ 
+ ```powershell
+ npm ci
+ ```
+ 
+-`npm ci` installs the exact versions recorded in `package-lock.json`. No environment variables or `.env` file are needed to run the app.
++This takes a minute or two. Warnings are normal. It is only a problem if it ends with a red `ERR!`. No environment variables or `.env` file are needed.
+ 
+ ### 4. Start the app
+ 
+@@ -58,16 +94,39 @@ npm ci
+ npm run dev
+ ```
+ 
+-Open **http://127.0.0.1:3000** in your browser. The server only listens on `127.0.0.1`, so other computers on the network cannot reach it. Press `Ctrl+C` in PowerShell to stop it.
++When PowerShell shows a `Local: http://127.0.0.1:3000/` line, open **http://127.0.0.1:3000** in Chrome or Edge.
++
++Keep this PowerShell window open while you use the app. When you're done, click the window and press `Ctrl+C` to stop it. The app only accepts connections from this computer (`127.0.0.1`), not from the rest of the network.
++
++### Next time
++
++You don't need to repeat steps 1–3. Open PowerShell and run:
++
++```powershell
++cd $HOME\Documents\abi
++npm run dev
++```
++
++### Getting the latest version
+ 
+-### 5. Build for production (optional)
++When the team says there's an update, stop the app (`Ctrl+C`), then run:
+ 
+ ```powershell
+-npm run build     # writes the optimized app to the dist\ folder
+-npm run preview   # serves dist\ at http://127.0.0.1:4173
++cd $HOME\Documents\abi
++git pull
++npm ci
++npm run dev
+ ```
+ 
+-### Available scripts
++### For developers: checks and production build
++
++Testers can skip this section.
++
++```powershell
++npm run lint      # type-checks the code; no output means it passed
++npm run build     # creates the optimized app in the dist\ folder
++npm run preview   # serves dist\ at http://127.0.0.1:4173
++```
+ 
+ | Command | What it does |
+ |---|---|
+@@ -77,6 +136,17 @@ npm run preview   # serves dist\ at http://127.0.0.1:4173
+ | `npm run lint` | Type-checks the project (`tsc --noEmit`) |
+ | `npm run clean` | Deletes the `dist/` folder |
+ 
++### Troubleshooting
++
++| What you see | What to do |
++|---|---|
++| "running scripts is disabled on this system" | Run the `Set-ExecutionPolicy` command from step 1, then try again |
++| "node" or "git" is not recognized | Close PowerShell, open a new window and try again. If it still fails, repeat step 1 |
++| `npm ci` mentions an unsupported engine or Node version | Update Node.js (`winget upgrade OpenJS.NodeJS.LTS`), open a new PowerShell window and try again |
++| PowerShell shows a different port, such as `3001` | Port 3000 is being used by another program. Use the address PowerShell shows. Your saved data belongs to the address, so stick to one |
++| Your data seems to have disappeared | Check you opened the same address as before: `127.0.0.1:3000` and `localhost:3000` keep separate data |
++| The page is blank or broken | Press F12, open the **Console** tab and send the red error messages to the team |
++
+ ### Notes on data and confidentiality
+ 
+ * **Where data lives:** Saved data belongs to the exact address you open. `http://127.0.0.1:3000`, `http://localhost:3000` and `http://127.0.0.1:4173` each have separate data. Use the same address every time. Clearing your browser's site data erases it.

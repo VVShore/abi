@@ -191,10 +191,15 @@ const createBlankReviewerSet = (): ReviewerScoreRecord[] => {
     ...r,
     scores: {},
     notes: {},
+    categoryRatings: {},
+    sectionComments: {},
+    recommendation: undefined,
+    overallSummary: '',
     keyStrengths: '',
     supportNeeded: '',
     isSubmitted: false,
     submittedAt: undefined,
+    lastSavedAt: undefined,
   }));
 };
 
@@ -605,13 +610,23 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
                 ? existing.domain
                 : incoming.domain || existing.domain,
             // Update intake application info while preserving existing additional fields
-            applicationInfo: {
-              ...(incoming.applicationInfo || DEFAULT_APPLICATION_INFO),
-              additionalFields: {
-                ...(incoming.applicationInfo?.additionalFields || {}),
-                ...(existing.applicationInfo?.additionalFields || {}),
-              },
-            },
+            applicationInfo: (() => {
+              const prevInfo = existing.applicationInfo || DEFAULT_APPLICATION_INFO;
+              const nextInfo = incoming.applicationInfo || DEFAULT_APPLICATION_INFO;
+              const keep = (prevVal?: string, nextVal?: string) =>
+                prevVal && prevVal.trim() && prevVal !== 'Not provided' ? prevVal : nextVal || 'Not provided';
+              const merged = { ...prevInfo };
+              (Object.keys(nextInfo) as (keyof ApplicationIntakeInfo)[]).forEach((key) => {
+                if (key !== 'additionalFields') {
+                  merged[key] = keep(prevInfo[key] as string, nextInfo[key] as string);
+                }
+              });
+              const additionalFields = { ...(prevInfo.additionalFields || {}) };
+              Object.entries(nextInfo.additionalFields || {}).forEach(([question, answer]) => {
+                additionalFields[question] = keep(additionalFields[question], answer);
+              });
+              return { ...merged, additionalFields };
+            })(),
             // Merge contact details without overwriting user-provided edits
             contactDetails: {
               primaryContactName:
@@ -657,8 +672,16 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
 
           existingMap.set(incoming.id, merged);
         } else {
-          // Brand new company entry: migrate cleanly
-          const migrated = migrateCompanyRecord(incoming, evaluationsByCompany);
+          // Brand new company entry: migrate cleanly, giving empty meetings the standard blank reviewer roster
+          const migrated = migrateCompanyRecord(
+            {
+              ...incoming,
+              meetings: (incoming.meetings || []).map((m) =>
+                m.reviewers && m.reviewers.length > 0 ? m : { ...m, reviewers: createBlankReviewerSet() }
+              ),
+            },
+            evaluationsByCompany
+          );
           existingMap.set(incoming.id, migrated);
         }
       });
@@ -672,7 +695,10 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
       importedList.forEach((c) => {
         if (!next[c.id]) {
           const pitchMeeting = c.meetings?.find((m) => m.type === 'Initial Pitch');
-          next[c.id] = pitchMeeting?.reviewers || createBlankReviewerSet();
+          next[c.id] =
+            pitchMeeting?.reviewers && pitchMeeting.reviewers.length > 0
+              ? pitchMeeting.reviewers
+              : createBlankReviewerSet();
         }
       });
       return next;

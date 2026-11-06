@@ -52,7 +52,12 @@ export const IndividualScorecardView: React.FC = () => {
     submitScorecard,
     triggerToast,
     setIsPitchDeckModalOpen,
+    activeMeetingId,
+    activeMeeting,
   } = useEvaluation();
+
+  // The pre-filled Vayim demo comments belong to its Initial Pitch only; never show them in a Progress Check-in.
+  const showDemoComments = activeCompanyId === 'vayim' && activeMeeting?.type !== 'Progress Check-in';
 
   // State to track if user is actively revising a previously submitted scorecard
   const [isEditingSubmitted, setIsEditingSubmitted] = useState<boolean>(false);
@@ -68,32 +73,32 @@ export const IndividualScorecardView: React.FC = () => {
 
   // Ratings for the 4 core categories: Team, Value Proposition, ABI Fit, Risk
   const [ratings, setRatings] = useState<Record<string, number>>({
-    team: currentReviewer.categoryRatings?.team || 4,
-    market: currentReviewer.categoryRatings?.market || 4,
-    fit: currentReviewer.categoryRatings?.fit || 4,
-    risk: currentReviewer.categoryRatings?.risk || 4,
+    team: currentReviewer.categoryRatings?.team || 0,
+    market: currentReviewer.categoryRatings?.market || 0,
+    fit: currentReviewer.categoryRatings?.fit || 0,
+    risk: currentReviewer.categoryRatings?.risk || 0,
   });
 
   // Comments for each of the 4 core categories
   const [comments, setComments] = useState<Record<string, string>>({
     team:
       currentReviewer.sectionComments?.team ||
-      (activeCompanyId === 'vayim'
+      (showDemoComments
         ? 'Founders have communicated openly about training needs in microbiology. Receptive to committee guidance and eager to work with ACC bioscience faculty.'
         : ''),
     market:
       currentReviewer.sectionComments?.market ||
-      (activeCompanyId === 'vayim'
+      (showDemoComments
         ? 'Strong clinical pull from regional ENT physicians. Solution fits into existing in-office catheter workflows without expensive capital equipment.'
         : ''),
     fit:
       currentReviewer.sectionComments?.fit ||
-      (activeCompanyId === 'vayim'
+      (showDemoComments
         ? 'Ideal match for ABI wet lab benches and BSL-2 spectrophotometer access. Founders committed to hiring ACC biotechnology student interns.'
         : ''),
     risk:
       currentReviewer.sectionComments?.risk ||
-      (activeCompanyId === 'vayim'
+      (showDemoComments
         ? 'FDA 510(k) pathway has identifiable predicates. IP filings are robust with 2 provisional applications in place.'
         : ''),
   });
@@ -111,35 +116,35 @@ export const IndividualScorecardView: React.FC = () => {
     setIsEditingSubmitted(false);
     setSnapshots(null);
     setRatings({
-      team: currentReviewer.categoryRatings?.team || 4,
-      market: currentReviewer.categoryRatings?.market || 4,
-      fit: currentReviewer.categoryRatings?.fit || 4,
-      risk: currentReviewer.categoryRatings?.risk || 4,
+      team: currentReviewer.categoryRatings?.team || 0,
+      market: currentReviewer.categoryRatings?.market || 0,
+      fit: currentReviewer.categoryRatings?.fit || 0,
+      risk: currentReviewer.categoryRatings?.risk || 0,
     });
     setComments({
       team:
         currentReviewer.sectionComments?.team ||
-        (activeCompanyId === 'vayim'
+        (showDemoComments
           ? 'Founders have communicated openly about training needs in microbiology. Receptive to committee guidance and eager to work with ACC bioscience faculty.'
           : ''),
       market:
         currentReviewer.sectionComments?.market ||
-        (activeCompanyId === 'vayim'
+        (showDemoComments
           ? 'Strong clinical pull from regional ENT physicians. Solution fits into existing in-office catheter workflows without expensive capital equipment.'
           : ''),
       fit:
         currentReviewer.sectionComments?.fit ||
-        (activeCompanyId === 'vayim'
+        (showDemoComments
           ? 'Ideal match for ABI wet lab benches and BSL-2 spectrophotometer access. Founders committed to hiring ACC biotechnology student interns.'
           : ''),
       risk:
         currentReviewer.sectionComments?.risk ||
-        (activeCompanyId === 'vayim'
+        (showDemoComments
           ? 'FDA 510(k) pathway has identifiable predicates. IP filings are robust with 2 provisional applications in place.'
           : ''),
     });
     setLastSavedLabel(currentReviewer.lastSavedAt || '1 min ago');
-  }, [currentReviewer.id, currentReviewer.isSubmitted, activeCompanyId]);
+  }, [currentReviewer.id, currentReviewer.isSubmitted, activeCompanyId, activeMeetingId]);
 
   // Track active section as user scrolls
   useEffect(() => {

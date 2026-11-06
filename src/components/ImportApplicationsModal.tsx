@@ -170,7 +170,7 @@ export const ImportApplicationsModal: React.FC = () => {
     }
 
     // Convert sheet to array of rows
-    const rawData = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '' });
+    const rawData = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '', raw: false });
 
     if (!rawData || rawData.length < 2) {
       setErrorMessage(`Worksheet "${sheetName}" is empty or has no data rows.`);
@@ -276,6 +276,7 @@ export const ImportApplicationsModal: React.FC = () => {
     const existingCompanyNames = new Set(companies.map((c) => normalizeString(c.name)));
 
     const candidates: ParsedCandidate[] = [];
+    const firstRowByName = new Map<string, number>();
 
     for (let rowIndex = 1; rowIndex < rawData.length; rowIndex++) {
       const row = rawData[rowIndex] || [];
@@ -336,7 +337,9 @@ export const ImportApplicationsModal: React.FC = () => {
       // Check if duplicate of an existing company
       const normalizedName = normalizeString(companyName);
       const matchingExisting = companies.find((c) => normalizeString(c.name) === normalizedName);
-      const isDuplicate = Boolean(matchingExisting);
+      const earlierRow = firstRowByName.get(normalizedName);
+      if (earlierRow === undefined) firstRowByName.set(normalizedName, rowIndex + 1);
+      const isDuplicate = Boolean(matchingExisting) || earlierRow !== undefined;
 
       candidates.push({
         tempId: `row_${rowIndex}`,
@@ -361,9 +364,9 @@ export const ImportApplicationsModal: React.FC = () => {
         submittedAt: getVal('submittedAt') || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         rawRow: rawRowDict,
         isDuplicate,
-        duplicateOf: matchingExisting?.name,
+        duplicateOf: matchingExisting?.name || (earlierRow !== undefined ? `Row ${earlierRow} in this workbook` : undefined),
         duplicateId: matchingExisting?.id,
-        duplicateAction: isDuplicate ? 'new' : 'new',
+        duplicateAction: isDuplicate ? 'skip' : 'new',
         isSkipped: false,
       });
     }
@@ -381,7 +384,16 @@ export const ImportApplicationsModal: React.FC = () => {
 
   const toggleSelectCandidate = (tempId: string) => {
     setParsedCandidates((prev) =>
-      prev.map((c) => (c.tempId === tempId ? { ...c, selected: !c.selected } : c))
+      prev.map((c) => {
+        if (c.tempId !== tempId) return c;
+        const selected = !c.selected;
+        // Ticking a duplicate is an explicit choice to import it as new; unticking means skip.
+        if (c.isDuplicate) {
+          const duplicateAction = selected ? (c.duplicateAction === 'skip' ? 'new' : c.duplicateAction) : 'skip';
+          return { ...c, selected, duplicateAction };
+        }
+        return { ...c, selected };
+      })
     );
   };
 
@@ -401,13 +413,16 @@ export const ImportApplicationsModal: React.FC = () => {
 
   const handleSelectAll = (select: boolean) => {
     setParsedCandidates((prev) =>
-      prev.map((c) => (c.isSkipped ? c : { ...c, selected: select }))
+      // Possible duplicates are never bulk-selected; each needs its own decision.
+      prev.map((c) => (c.isSkipped || (select && c.isDuplicate) ? c : { ...c, selected: select }))
     );
   };
 
   // Execute the import
   const handleConfirmImport = () => {
-    const toImport = parsedCandidates.filter((c) => c.selected && !c.isSkipped);
+    const toImport = parsedCandidates.filter(
+      (c) => c.selected && !c.isSkipped && !(c.isDuplicate && c.duplicateAction === 'skip')
+    );
 
     if (toImport.length === 0) {
       triggerToast('No Records Selected', 'Please select at least one application to import.', 'warning');
@@ -485,6 +500,14 @@ export const ImportApplicationsModal: React.FC = () => {
     });
 
     importCompanies(importedCompanies);
+    const updatedCount = toImport.filter((c) => c.isDuplicate && c.duplicateAction === 'update' && c.duplicateId).length;
+    const notImportedCount = parsedCandidates.length - toImport.length;
+    const possibleDuplicateCount = parsedCandidates.filter((c) => c.isDuplicate).length;
+    triggerToast(
+      'Import Complete',
+      `Imported ${toImport.length - updatedCount} new, updated ${updatedCount} existing, skipped ${notImportedCount} (${possibleDuplicateCount} possible duplicate${possibleDuplicateCount === 1 ? '' : 's'} flagged). Existing evaluations and contracts preserved.`,
+      'success'
+    );
     setIsImportModalOpen(false);
   };
 
@@ -823,7 +846,7 @@ export const ImportApplicationsModal: React.FC = () => {
                                   className="text-[11px] font-bold border border-amber-300 rounded px-1.5 py-1 bg-white text-amber-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
                                 >
                                   <option value="new">Import as New</option>
-                                  <option value="update">Update Existing</option>
+                                  {c.duplicateId && <option value="update">Update Existing</option>}
                                   <option value="skip">Skip</option>
                                 </select>
                               ) : (

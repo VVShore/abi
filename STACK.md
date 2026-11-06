@@ -51,7 +51,7 @@ This report outlines the technology stack, dependencies, runtime configuration, 
 
 ## 5. Application Execution and Deployment
 
-* **Local Development Execution**: The application runs locally via Vite by executing `npm run dev` to serve the frontend on port 3000 bound to host `0.0.0.0`.
+* **Local Development Execution**: The application runs locally via Vite by executing `npm run dev` to serve the frontend at `http://127.0.0.1:3000` (bound to `127.0.0.1` only, so it is not reachable from other machines).
 * **Production Build Workflow**: The build command `npm run build` compiles TypeScript and bundles minified assets into the `dist/` directory for production deployment.
 * **Hosting and Cloud Deployment**: The application is configured to deploy as a containerized web service on Google Cloud Run through Google AI Studio.
 * **Runtime Secret Management**: Runtime variables such as `GEMINI_API_KEY` and `APP_URL` are injected automatically into the hosting container by Google AI Studio from user secrets.
