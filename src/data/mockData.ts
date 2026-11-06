@@ -4,42 +4,13 @@ import {
   KeyPriority,
   EvaluationTopic,
   CompanyAssessment,
+  FeedbackSectionData,
+  OrganizationContactDetails,
+  ApplicationIntakeInfo,
+  OrganizationContractDetails,
+  ContractDocument,
+  MeetingRecord,
 } from '../types';
-
-export const INITIAL_COMPANY: CompanyAssessment = {
-  id: 'vayim',
-  name: 'Vayim',
-  round: 'Round 1 Evaluation',
-  cohort: 'Cohort 2026.1 Assessment',
-  reviewDate: 'Jan 23, 2026',
-  domain: 'ENT Biofilm Therapeutics',
-  admissionStatus: 'Approved',
-  thresholdScore: 3.5,
-};
-
-export const INITIAL_COMPANIES: CompanyAssessment[] = [
-  INITIAL_COMPANY,
-  {
-    id: 'bionanox',
-    name: 'BioNanox Diagnostics',
-    round: 'Round 1 Evaluation',
-    cohort: 'Cohort 2026.1 Assessment',
-    reviewDate: 'Feb 10, 2026',
-    domain: 'Rapid Microfluidic Pathogen Detection',
-    admissionStatus: 'Pending',
-    thresholdScore: 3.5,
-  },
-  {
-    id: 'austin_cell',
-    name: 'Austin Cell Therapeutics',
-    round: 'Round 2 Evaluation',
-    cohort: 'Cohort 2025.2 Review',
-    reviewDate: 'Nov 14, 2025',
-    domain: 'Allogeneic Stem Cell Preservation',
-    admissionStatus: 'Approved',
-    thresholdScore: 3.5,
-  },
-];
 
 export const QUESTIONS_DATA: QuestionCriterion[] = [
   // Section 1: Team
@@ -555,6 +526,386 @@ export const INITIAL_REVIEWERS: ReviewerScoreRecord[] = [
     submittedAt: 'Jan 23, 2026 16:15',
   },
 ];
+
+export const DEFAULT_FEEDBACK_SECTIONS: FeedbackSectionData[] = [
+  {
+    id: 'overall',
+    title: 'OVERALL FEEDBACK',
+    prompt: 'What is the overall view on the company, where it is at now, and its future path.',
+    summary:
+      'Company is a small team with a potentially very valuable technology portfolio once the injection technology and therapeutic component are married. However, each may be valuable independently. The team possesses the technical expertise to drive progress at a high-level but will need support from staff in the laboratory and experts or advisors in the non-technical aspects of the business, such as the regulatory pathway, business development, and connections to partners. This technology is at the stage where partnership with ABI is both appropriate, feasible, and desirable, though they may quickly outgrow the facility. Marcel personally appears to be a driven, successful, and conscientious member of the community and would be welcome in the Austin ecosystem. Because of this the committee has recommended that Company be offered admission into the Incubator.',
+  },
+  {
+    id: 'team',
+    title: 'FEEDBACK ON TEAM',
+    prompt: 'Does the company possess the internal talent and/or hired external talent needed to make progress?',
+    categoryScoreKey: 'team',
+    summary:
+      'There appears to be no concern about the technical expertise that Company has access to. The two largest gaps identified by the committee would be (1) selection of the appropriate laboratory staff to conduct the work and (2) collaborators, advisors, or staff to provide insight to the non-technical aspects of the business (i.e. business development, regulatory partners).',
+    quotes: [
+      'He will need lab staff and some business help. He acknowledged the lab need.',
+      "I think they're likely qualified to succeed with solution development. Commercial success is a different question. He is an accomplished PI with a long track record in the field.",
+      'He seems to have many many academic collaborators and experience, but may need to engage other stakeholders in Austin ecosystem.',
+    ],
+  },
+  {
+    id: 'abi_fit',
+    title: 'FEEDBACK ON RELATIONSHIP WITH ABI',
+    prompt: 'Does the mission of the company align with ABI? Would a relationship between the company and ABI be beneficial to both parties?',
+    categoryScoreKey: 'fit',
+    summary:
+      'The facility offered by ABI appears to have the vast majority of the instrumentation that the company would need for internal R&D as well as some validation. The size of the company also aligns with ABI’s portfolio. They will need to hire staff to conduct the work at the incubator and ensure those staff work well in these spaces. They will also need to conduct animal work at some point outside of ABI.',
+    quotes: [
+      '[Company would need] Cell culture, flow, qPCR, etc. They want to do assay dev and development of cell differentiation procedure. No animal work being done.',
+      "This wasn't completely clear to me. It seems like the space might be useful for making cells and assay development, but the case wasn't super-strong.",
+      'Yes he will be fine here [at ABI]',
+    ],
+  },
+  {
+    id: 'business_plan',
+    title: 'FEEDBACK ON BUSINESS PLAN',
+    prompt: 'Does the company have a solution that is viable, desirable, and feasible? Is there a clear path to commercialization of the technology?',
+    categoryScoreKey: 'market',
+    summary:
+      'The current targeted exit strategy seems to likely be acquisition due to the extended timeline to get their technology into patients. This is due in large part due to the novelty of the technology but also due to the market space they are entering (therapeutics). This is a risky strategy due to many factors and may be ameliorated to some extent by developing relationships with key stakeholders (and potential customers) now and possibly pursuing licensing opportunities. The committee identified a significant amount of risk here and addition of expertise in this space (business development, regulatory, etc) via staff or advisors will be key. There was also concern about expired patents.',
+    quotes: [
+      'Far from commercial readiness. Exit strategy seems to be pre-revenue acquisition, which is definitely risky / lower probability.',
+      "It feels like they've figured out a potentially better solution to a problem that people want solved. It's not clear that they've figured out if someone would be willing to pay for the solution. (Focus was more on company acquisition than on the end customer.)",
+      'This product has a long way to go. Direct injection of modified cells to the center of the brain will be a hard sell.',
+    ],
+  },
+  {
+    id: 'technology',
+    title: 'FEEDBACK ON TECHNOLOGY',
+    prompt: 'Does the company have a technology that has been developed or there is significant confidence in it being developed?',
+    categoryScoreKey: 'risk',
+    summary:
+      'The technology appears to be at a very early stage, but has a large potential for dramatic improvement relative to competitors. This means the risk is high, but the potential is very great. Identifying the key ‘go / no-go’ experiments at ABI and technological gates more broadly will be key in maintaining momentum. The specific injection technology may have more monetary value than the cellular component at the end of the day, and further development and/or protection of this technology can de-risk the less mature therapeutic and cellular component. The regulatory risk of this technology should not be underestimated and evaluated internally and with advisors and external stakeholders.',
+    quotes: [
+      'The major value add for their tech is the surgical implantation, which is far above competitors. Specific cell enrichment is slightly better, but less separation it seems.',
+      'It [the technology] is well defined, but complicated.',
+      'No iPS derived cell therapy has been approved previously, so risk there. Not personalized, they want allogeneic therapy from one single cell line',
+    ],
+  },
+];
+
+export const DEFAULT_CONTACT_DETAILS: OrganizationContactDetails = {
+  primaryContactName: 'Not provided',
+  roleOrTitle: 'Not provided',
+  email: 'Not provided',
+  phone: 'Not provided',
+  website: 'Not provided',
+  linkedIn: 'Not provided',
+  mailingAddress: 'Not provided',
+};
+
+export const DEFAULT_APPLICATION_INFO: ApplicationIntakeInfo = {
+  submittedAt: 'Not provided',
+  executiveSummary: 'Not provided',
+  problemStatement: 'Not provided',
+  proposedSolution: 'Not provided',
+  stageOfDevelopment: 'Not provided',
+  targetMarket: 'Not provided',
+  teamBackground: 'Not provided',
+  fundingRaisedToDate: 'Not provided',
+  spaceRequirements: 'Not provided',
+  additionalFields: {},
+};
+
+export const DEFAULT_CONTRACT_DETAILS: OrganizationContractDetails = {
+  status: 'Pending Execution',
+  agreementDate: 'Not provided',
+  effectiveStartDate: 'Not provided',
+  termEndDate: 'Not provided',
+  monthlyFee: 'Not provided',
+  securityDeposit: 'Not provided',
+  billingCadence: 'Not provided',
+  rooms: [],
+  benches: [],
+  instrumentAccess: [],
+  specialConditions: 'Not provided',
+};
+
+export const VAYIM_CONTACT_DETAILS: OrganizationContactDetails = {
+  primaryContactName: 'Dr. Marcel Tremblay',
+  roleOrTitle: 'Co-Founder & Chief Executive Officer',
+  email: 'marcel@vayimtx.com',
+  phone: '(512) 842-1980',
+  website: 'https://vayimtx.com',
+  linkedIn: 'https://linkedin.com/company/vayim-therapeutics',
+  mailingAddress: '6101 Highland Campus Dr, Bldg 4000, Austin, TX 78752',
+};
+
+export const VAYIM_APPLICATION_INFO: ApplicationIntakeInfo = {
+  submittedAt: 'Jan 05, 2026',
+  executiveSummary:
+    'Vayim Therapeutics is an early-stage biopharmaceutical startup developing an enzyme-mediated topical catheter delivery platform to eradicate recalcitrant bacterial biofilms in chronic rhinosinusitis (CRS).',
+  problemStatement:
+    'Chronic rhinosinusitis afflicts 30M+ Americans. Bacterial biofilms create an impenetrable extracellular matrix causing high surgical revision rates (25% in 3 years) and systemic antibiotic resistance.',
+  proposedSolution:
+    'Proprietary catalytic formulation disrupting extracellular polysaccharide matrix, combined with outpatient targeted irrigations that restore native mucosal ciliary function.',
+  stageOfDevelopment: 'Pre-clinical validation; in-vitro eradication data established.',
+  targetMarket: 'Outpatient Ear, Nose, and Throat (ENT) surgical practices and ambulatory surgery centers.',
+  teamBackground:
+    'Led by serial biotechnology founders and an active rhinologic ENT surgeon with 15+ years clinical expertise and proven patent filings.',
+  fundingRaisedToDate: '$750,000 Seed / Non-dilutive NIH SBIR Phase 1 grant application submitted.',
+  spaceRequirements:
+    'Two dedicated wet lab benches, BSL-2 cell/microbiology culture access, -80°C cold storage, and spectrophotometer/fluorescence plate readers.',
+  additionalFields: {
+    'Referral Source': 'Austin Technology Incubator (ATI) / BioAustin Network',
+    'Hazardous Chemicals': 'Standard BSL-2 microbial strains (P. aeruginosa, S. aureus); no volatile toxics.',
+    'ACC Student Interns': 'Committed to mentoring 2 ACC Biotechnology AAS interns per academic year.',
+  },
+};
+
+export const VAYIM_CONTRACT_DETAILS: OrganizationContractDetails = {
+  status: 'Active',
+  agreementDate: 'Jan 28, 2026',
+  effectiveStartDate: 'Feb 01, 2026',
+  termEndDate: 'Jan 31, 2027',
+  monthlyFee: '$1,850 / month',
+  securityDeposit: '$3,700',
+  billingCadence: 'Monthly (Net 30)',
+  rooms: ['Room 214 (Wet Lab)', 'BSL-2 Shared Culture Suite A'],
+  benches: ['Bench B-03', 'Bench B-04'],
+  instrumentAccess: [
+    'Confocal Laser Scanning Microscope (Leica STELLARIS)',
+    'Flow Cytometer (BD Accuri C6 Plus)',
+    'Autoclave & Media Preparation Suite',
+    '-80°C Ultra-Low Temperature Freezer Rack 3',
+    'Microplate Spectrophotometer (BioTek Synergy H1)',
+  ],
+  specialConditions:
+    'Resident company must sponsor at least 1 ACC Biotechnology AAS student intern per academic semester. All BSL-2 microbial biofilm protocols must be approved by the ACC Institutional Biosafety Committee (IBC) prior to culture initiation.',
+};
+
+export const VAYIM_CONTRACT_DOCUMENTS: ContractDocument[] = [
+  {
+    id: 'doc_vayim_license_2026',
+    organizationId: 'vayim',
+    title: 'ABI Resident Facility License Agreement - Vayim Therapeutics.pdf',
+    documentType: 'Original Contract',
+    uploadedAt: 'Jan 28, 2026',
+    fileSize: '2.4 MB',
+    fileType: 'application/pdf',
+    uploadedDuringMeetingId: 'vayim_initial_pitch',
+  },
+  {
+    id: 'doc_vayim_amendment_1',
+    organizationId: 'vayim',
+    title: 'Amendment 1 - Dedicated Bench B-04 Expansion & Ultra-Low Freezer Allocation.pdf',
+    documentType: 'Amendment',
+    uploadedAt: 'Apr 15, 2026',
+    fileSize: '480 KB',
+    fileType: 'application/pdf',
+    uploadedDuringMeetingId: 'vayim_checkin_2026_04',
+  },
+];
+
+export const VAYIM_MEETINGS: MeetingRecord[] = [
+  {
+    id: 'vayim_initial_pitch',
+    organizationId: 'vayim',
+    type: 'Initial Pitch',
+    title: 'Initial Pitch & Steering Committee Admission Review',
+    date: 'Jan 23, 2026',
+    deckTitle: 'Vayim - Cohort 2026.1 Pitch Deck.pdf',
+    deckSlideCount: 12,
+    deckDocumentId: 'doc_vayim_pitch_deck',
+    reviewers: INITIAL_REVIEWERS,
+    feedbackSummary: DEFAULT_FEEDBACK_SECTIONS,
+    status: 'Completed',
+  },
+  {
+    id: 'vayim_checkin_2026_04',
+    organizationId: 'vayim',
+    type: 'Progress Check-in',
+    title: 'Q1 Progress Check-in: Biofilm Assay & BSL-2 Milestones',
+    date: 'Apr 15, 2026',
+    deckTitle: 'Vayim - Q1 Progress Update Deck.pdf',
+    deckSlideCount: 8,
+    deckDocumentId: 'doc_vayim_checkin_deck',
+    reviewers: INITIAL_REVIEWERS.map((r) => ({
+      ...r,
+      lastSavedAt: 'Apr 15, 2026 16:30',
+    })),
+    feedbackSummary: DEFAULT_FEEDBACK_SECTIONS,
+    status: 'Completed',
+  },
+];
+
+export const INITIAL_COMPANY: CompanyAssessment = {
+  id: 'vayim',
+  name: 'Vayim',
+  round: 'Round 1 Evaluation',
+  cohort: 'Cohort 2026.1 Assessment',
+  reviewDate: 'Jan 23, 2026',
+  domain: 'ENT Biofilm Therapeutics',
+  admissionStatus: 'Approved',
+  thresholdScore: 3.5,
+  contactDetails: VAYIM_CONTACT_DETAILS,
+  applicationInfo: VAYIM_APPLICATION_INFO,
+  contractDetails: VAYIM_CONTRACT_DETAILS,
+  contractDocuments: VAYIM_CONTRACT_DOCUMENTS,
+  meetings: VAYIM_MEETINGS,
+};
+
+export const INITIAL_COMPANIES: CompanyAssessment[] = [
+  INITIAL_COMPANY,
+  {
+    id: 'bionanox',
+    name: 'BioNanox Diagnostics',
+    round: 'Round 1 Evaluation',
+    cohort: 'Cohort 2026.1 Assessment',
+    reviewDate: 'Feb 10, 2026',
+    domain: 'Rapid Microfluidic Pathogen Detection',
+    admissionStatus: 'Pending',
+    thresholdScore: 3.5,
+    contactDetails: {
+      ...DEFAULT_CONTACT_DETAILS,
+      primaryContactName: 'Dr. Elena Rostova',
+      roleOrTitle: 'Founder & CTO',
+      email: 'elena@bionanox.io',
+      phone: '(512) 774-2901',
+      website: 'https://bionanox.io',
+    },
+    applicationInfo: {
+      ...DEFAULT_APPLICATION_INFO,
+      submittedAt: 'Jan 18, 2026',
+      executiveSummary: 'Point-of-care microfluidic cartridge detecting bacterial sepsis in under 15 minutes.',
+      spaceRequirements: '1 dedicated wet lab bench, spectrophotometer, and BSL-2 biosafety cabinet.',
+    },
+    contractDetails: DEFAULT_CONTRACT_DETAILS,
+    contractDocuments: [],
+    meetings: [
+      {
+        id: 'bionanox_initial_pitch',
+        organizationId: 'bionanox',
+        type: 'Initial Pitch',
+        title: 'BioNanox Diagnostics - Initial Pitch Review',
+        date: 'Feb 10, 2026',
+        deckTitle: 'BioNanox_Pitch_Deck_Cohort_2026.1.pdf',
+        reviewers: INITIAL_REVIEWERS.map((r) => ({
+          ...r,
+          scores: {
+            team_coachability: 4,
+            team_qualifications: 4,
+            team_skillset: 3,
+            market_pmf: 4,
+            market_competitive: 4,
+            market_traction: 3,
+            market_ecosystem: 4,
+            fit_labspace: 5,
+            fit_abifit: 4,
+            fit_students: 4,
+            fit_goodcitizen: 4,
+            risk_regulatory: 3,
+            risk_commercial: 3,
+            risk_ip: 4,
+            risk_funding: 3,
+            risk_revenue: 3,
+          },
+          notes: {
+            team_coachability: 'Founders receptive to guidance on diagnostic sensitivity assays.',
+            fit_labspace: 'Direct match for BSL-2 biosafety hoods and spectrophotometers.',
+          },
+          keyStrengths: 'High technical aptitude in microfluidic engineering and point-of-care diagnostics.',
+          supportNeeded: 'Regulatory guidance on CLIA waiver submission.',
+          isSubmitted: false,
+        })),
+        feedbackSummary: DEFAULT_FEEDBACK_SECTIONS,
+        status: 'In Progress',
+      },
+    ],
+  },
+  {
+    id: 'austin_cell',
+    name: 'Austin Cell Therapeutics',
+    round: 'Round 2 Evaluation',
+    cohort: 'Cohort 2025.2 Review',
+    reviewDate: 'Nov 14, 2025',
+    domain: 'Allogeneic Stem Cell Preservation',
+    admissionStatus: 'Approved',
+    thresholdScore: 3.5,
+    contactDetails: {
+      ...DEFAULT_CONTACT_DETAILS,
+      primaryContactName: 'Marcus Vance',
+      roleOrTitle: 'Co-Founder & COO',
+      email: 'm.vance@austincelltx.com',
+      phone: '(512) 991-3840',
+      website: 'https://austincelltx.com',
+    },
+    applicationInfo: {
+      ...DEFAULT_APPLICATION_INFO,
+      submittedAt: 'Oct 20, 2025',
+      executiveSummary: 'Cryopreservation reagents extending allogeneic stem cell viability post-thaw.',
+      spaceRequirements: '2 benches, liquid nitrogen storage dewar, flow cytometer.',
+    },
+    contractDetails: {
+      status: 'Active',
+      agreementDate: 'Dec 01, 2025',
+      effectiveStartDate: 'Jan 01, 2026',
+      termEndDate: 'Dec 31, 2026',
+      monthlyFee: '$2,200 / month',
+      securityDeposit: '$4,400',
+      billingCadence: 'Monthly (Net 30)',
+      rooms: ['Room 216 (Stem Cell Suite)'],
+      benches: ['Bench C-01', 'Bench C-02'],
+      instrumentAccess: ['Flow Cytometer (BD Accuri C6 Plus)', 'Cryogenic Liquid Nitrogen Storage Dewar'],
+      specialConditions: 'Liquid nitrogen cryogenic dewars calibration supervised by ABI Lab Operations.',
+    },
+    contractDocuments: [
+      {
+        id: 'doc_austin_cell_contract',
+        organizationId: 'austin_cell',
+        title: 'ABI Resident Facility License Agreement - Austin Cell Therapeutics.pdf',
+        documentType: 'Original Contract',
+        uploadedAt: 'Dec 01, 2025',
+        fileSize: '2.1 MB',
+        fileType: 'application/pdf',
+        uploadedDuringMeetingId: 'austin_cell_initial_pitch',
+      },
+    ],
+    meetings: [
+      {
+        id: 'austin_cell_initial_pitch',
+        organizationId: 'austin_cell',
+        type: 'Initial Pitch',
+        title: 'Austin Cell Therapeutics - Round 2 Evaluation Pitch',
+        date: 'Nov 14, 2025',
+        deckTitle: 'Austin_Cell_Pitch_Deck_2025.2.pdf',
+        reviewers: INITIAL_REVIEWERS.map((r) => ({
+          ...r,
+          scores: {
+            team_coachability: 5,
+            team_qualifications: 5,
+            team_skillset: 4,
+            market_pmf: 4,
+            market_competitive: 4,
+            market_traction: 4,
+            market_ecosystem: 4,
+            fit_labspace: 4,
+            fit_abifit: 5,
+            fit_students: 5,
+            fit_goodcitizen: 5,
+            risk_regulatory: 4,
+            risk_commercial: 4,
+            risk_ip: 4,
+            risk_funding: 4,
+            risk_revenue: 4,
+          },
+          notes: {},
+          keyStrengths: 'Serial biotech entrepreneurs with proven track record in stem cell biology.',
+          supportNeeded: 'Liquid nitrogen cryogenic dewars calibration.',
+          isSubmitted: true,
+        })),
+        feedbackSummary: DEFAULT_FEEDBACK_SECTIONS,
+        status: 'Completed',
+      },
+    ],
+  },
+];
+
 
 export const KEY_PRIORITIES_DATA: KeyPriority[] = [
   {

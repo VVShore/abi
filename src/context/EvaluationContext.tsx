@@ -6,12 +6,23 @@ import {
   CompanyAssessment,
   SectionHeaderConfig,
   RecommendationDecision,
+  OrganizationContractDetails,
+  OrganizationContactDetails,
+  ApplicationIntakeInfo,
+  ContractDocument,
+  ContractDocumentType,
+  MeetingRecord,
+  FeedbackSectionData,
 } from '../types';
 import {
   INITIAL_COMPANIES,
   INITIAL_COMPANY,
   QUESTIONS_DATA,
   INITIAL_REVIEWERS,
+  DEFAULT_FEEDBACK_SECTIONS,
+  DEFAULT_CONTRACT_DETAILS,
+  DEFAULT_CONTACT_DETAILS,
+  DEFAULT_APPLICATION_INFO,
 } from '../data/mockData';
 
 export type ScreenType = 'individual' | 'committee' | 'report';
@@ -50,7 +61,7 @@ interface ToastState {
   type: 'success' | 'info' | 'warning';
 }
 
-interface EvaluationContextType {
+export interface EvaluationContextType {
   activeScreen: ScreenType;
   setActiveScreen: (screen: ScreenType) => void;
   activeReviewerId: string;
@@ -58,8 +69,8 @@ interface EvaluationContextType {
   currentReviewer: ReviewerScoreRecord;
   reviewers: ReviewerScoreRecord[];
   addNewReviewer: (name: string, title?: string, role?: string) => string;
-  
-  // Company management
+
+  // Organization / Company management
   companies: CompanyAssessment[];
   activeCompanyId: string;
   setActiveCompanyId: (id: string) => void;
@@ -69,6 +80,33 @@ interface EvaluationContextType {
   deleteCompany: (companyId: string) => void;
   isCompanyModalOpen: boolean;
   setIsCompanyModalOpen: (open: boolean) => void;
+
+  // Meeting management (belongs to active organization)
+  activeMeetingId: string;
+  setActiveMeetingId: (id: string) => void;
+  activeMeeting: MeetingRecord | undefined;
+  meetings: MeetingRecord[];
+  addProgressCheckin: (date: string, title?: string) => string;
+  createInitialPitch: (date?: string, title?: string) => string;
+  updateMeetingFeedback: (meetingId: string, feedbackSections: FeedbackSectionData[]) => void;
+
+  // Contract Details & Documents (belongs to active organization)
+  contractDetails: OrganizationContractDetails;
+  updateContractDetails: (updates: Partial<OrganizationContractDetails>) => void;
+  contractDocuments: ContractDocument[];
+  addContractDocument: (doc: {
+    title: string;
+    documentType: ContractDocumentType;
+    fileSize?: string;
+    fileType?: string;
+    uploadedDuringMeetingId?: string;
+  }) => string;
+
+  // Contact & Application Info (belongs to active organization)
+  contactDetails: OrganizationContactDetails;
+  updateContactDetails: (updates: Partial<OrganizationContactDetails>) => void;
+  applicationInfo: ApplicationIntakeInfo;
+  updateApplicationInfo: (updates: Partial<ApplicationIntakeInfo>) => void;
 
   // Criteria & Scoring
   questions: QuestionCriterion[];
@@ -90,7 +128,7 @@ interface EvaluationContextType {
   allQuestionsAnswered: boolean;
 
   // Reviewer details
-  updateReviewerInfo: (name: string, title?: string) => void;
+  updateReviewerInfo: (name: string, title?: string, role?: string) => void;
   updateReviewerSummary: (strengths: string, support: string) => void;
   setCategoryRating: (categoryKey: string, rating: number) => void;
   setRecommendation: (recommendation: RecommendationDecision) => void;
@@ -132,6 +170,9 @@ interface EvaluationContextType {
   setIsEmailModalOpen: (open: boolean) => void;
   isPitchDeckModalOpen: boolean;
   setIsPitchDeckModalOpen: (open: boolean) => void;
+  isImportModalOpen: boolean;
+  setIsImportModalOpen: (open: boolean) => void;
+  importCompanies: (imported: CompanyAssessment[]) => void;
 }
 
 const EvaluationContext = createContext<EvaluationContextType | undefined>(undefined);
@@ -139,6 +180,7 @@ const EvaluationContext = createContext<EvaluationContextType | undefined>(undef
 const STORAGE_KEYS = {
   COMPANIES: 'abi_companies_v4',
   ACTIVE_COMPANY: 'abi_active_company_id_v4',
+  ACTIVE_MEETING: 'abi_active_meeting_id_v4',
   EVALUATIONS: 'abi_evaluations_by_company_v4',
   QUESTIONS: 'abi_questions_v4',
   SECTION_HEADERS: 'abi_section_headers_v4',
@@ -156,25 +198,110 @@ const createBlankReviewerSet = (): ReviewerScoreRecord[] => {
   }));
 };
 
+/**
+ * Idempotent, safe migration helper:
+ * - Preserves existing stored records.
+ * - Migrates existing evaluation data only when its meeting association is clear.
+ * - Never silently assigns ambiguous historical records to a new meeting.
+ * - Safe to run more than once.
+ * - Does not store file binaries in localStorage.
+ */
+const migrateCompanyRecord = (
+  comp: CompanyAssessment,
+  savedEvaluations: Record<string, ReviewerScoreRecord[]>
+): CompanyAssessment => {
+  // 1. Contract details (default missing fields to "Not provided")
+  const contractDetails: OrganizationContractDetails = comp.contractDetails || {
+    ...DEFAULT_CONTRACT_DETAILS,
+  };
+
+  // 2. Contact details (default missing fields to "Not provided")
+  const contactDetails: OrganizationContactDetails = comp.contactDetails || {
+    ...DEFAULT_CONTACT_DETAILS,
+  };
+
+  // 3. Application / Intake info (default missing fields to "Not provided")
+  const applicationInfo: ApplicationIntakeInfo = comp.applicationInfo || {
+    ...DEFAULT_APPLICATION_INFO,
+  };
+
+  // 4. Contract documents (metadata only, zero file binaries)
+  const contractDocuments: ContractDocument[] = Array.isArray(comp.contractDocuments)
+    ? comp.contractDocuments
+    : [];
+
+  // 5. Meetings migration: if already populated, keep intact
+  let meetings: MeetingRecord[] = [];
+  if (Array.isArray(comp.meetings) && comp.meetings.length > 0) {
+    meetings = comp.meetings;
+  } else {
+    // Check if there is an unambiguous historical evaluation record for this company
+    const historicalEvals = savedEvaluations[comp.id];
+    const initialPitchMeeting: MeetingRecord = {
+      id: `${comp.id}_pitch`,
+      organizationId: comp.id,
+      type: 'Initial Pitch',
+      title: `${comp.name} - Initial Pitch Evaluation`,
+      date: comp.reviewDate || 'Jan 23, 2026',
+      deckTitle: `${comp.name} Pitch Deck.pdf`,
+      deckSlideCount: 12,
+      reviewers:
+        historicalEvals && Array.isArray(historicalEvals) && historicalEvals.length > 0
+          ? historicalEvals
+          : createBlankReviewerSet(),
+      feedbackSummary: DEFAULT_FEEDBACK_SECTIONS,
+      status: comp.admissionStatus === 'Approved' ? 'Completed' : 'In Progress',
+    };
+    meetings = [initialPitchMeeting];
+  }
+
+  return {
+    ...comp,
+    contractDetails,
+    contactDetails,
+    applicationInfo,
+    contractDocuments,
+    meetings,
+  };
+};
+
 export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [activeScreen, setActiveScreen] = useState<ScreenType>('individual');
   const [activeReviewerId, setActiveReviewerId] = useState<string>('nl');
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
 
-  // Companies state
-  const [companies, setCompanies] = useState<CompanyAssessment[]>(() => {
+  // Raw evaluations map from local storage (for legacy reads and fallback)
+  const [evaluationsByCompany, setEvaluationsByCompany] = useState<Record<string, ReviewerScoreRecord[]>>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.COMPANIES);
+      const saved = localStorage.getItem(STORAGE_KEYS.EVALUATIONS);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (parsed && typeof parsed === 'object') {
           return parsed;
         }
       }
     } catch {
       // fallback
     }
-    return INITIAL_COMPANIES;
+    return {
+      vayim: INITIAL_REVIEWERS,
+    };
+  });
+
+  // Companies / Organizations state (hydrated with idempotent migration)
+  const [companies, setCompanies] = useState<CompanyAssessment[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.COMPANIES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((c) => migrateCompanyRecord(c, evaluationsByCompany));
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return INITIAL_COMPANIES.map((c) => migrateCompanyRecord(c, evaluationsByCompany));
   });
 
   const [activeCompanyId, setActiveCompanyId] = useState<string>(() => {
@@ -188,6 +315,36 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
     }
     return companies[0]?.id || 'vayim';
   });
+
+  // Active Company
+  const company = useMemo(() => {
+    return companies.find((c) => c.id === activeCompanyId) || companies[0] || INITIAL_COMPANY;
+  }, [companies, activeCompanyId]);
+
+  // Active Meeting ID
+  const [activeMeetingId, setActiveMeetingId] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.ACTIVE_MEETING);
+      const activeComp = companies.find((c) => c.id === activeCompanyId) || companies[0];
+      if (saved && activeComp?.meetings?.some((m) => m.id === saved)) {
+        return saved;
+      }
+    } catch {
+      // fallback
+    }
+    const initialMeeting = (companies.find((c) => c.id === activeCompanyId) || companies[0])?.meetings?.[0];
+    return initialMeeting?.id || `${activeCompanyId}_pitch`;
+  });
+
+  // Ensure activeMeetingId points to a valid meeting of the active company when company changes
+  useEffect(() => {
+    if (company.meetings && company.meetings.length > 0) {
+      const exists = company.meetings.some((m) => m.id === activeMeetingId);
+      if (!exists) {
+        setActiveMeetingId(company.meetings[0].id);
+      }
+    }
+  }, [company.id, company.meetings, activeMeetingId]);
 
   // Questions definition state
   const [questions, setQuestions] = useState<QuestionCriterion[]>(() => {
@@ -246,94 +403,25 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
     return DEFAULT_SECTION_HEADERS;
   });
 
-  // Evaluations by company
-  const [evaluationsByCompany, setEvaluationsByCompany] = useState<Record<string, ReviewerScoreRecord[]>>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.EVALUATIONS);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === 'object') {
-          return parsed;
-        }
-      }
-    } catch {
-      // fallback
-    }
-    return {
-      vayim: INITIAL_REVIEWERS,
-      bionanox: INITIAL_REVIEWERS.map((r) => ({
-        ...r,
-        scores: {
-          team_coachability: 4,
-          team_qualifications: 4,
-          team_skillset: 3,
-          market_pmf: 4,
-          market_competitive: 4,
-          market_traction: 3,
-          market_ecosystem: 4,
-          fit_labspace: 5,
-          fit_abifit: 4,
-          fit_students: 4,
-          fit_goodcitizen: 4,
-          risk_regulatory: 3,
-          risk_commercial: 3,
-          risk_ip: 4,
-          risk_funding: 3,
-          risk_revenue: 3,
-        },
-        notes: {
-          team_coachability: 'Founders receptive to guidance on diagnostic sensitivity assays.',
-          fit_labspace: 'Direct match for BSL-2 biosafety hoods and spectrophotometers.',
-        },
-        keyStrengths: 'High technical aptitude in microfluidic engineering and point-of-care diagnostics.',
-        supportNeeded: 'Regulatory guidance on CLIA waiver submission.',
-        isSubmitted: false,
-      })),
-      austin_cell: INITIAL_REVIEWERS.map((r) => ({
-        ...r,
-        scores: {
-          team_coachability: 5,
-          team_qualifications: 5,
-          team_skillset: 4,
-          market_pmf: 4,
-          market_competitive: 4,
-          market_traction: 4,
-          market_ecosystem: 4,
-          fit_labspace: 4,
-          fit_abifit: 5,
-          fit_students: 5,
-          fit_goodcitizen: 5,
-          risk_regulatory: 4,
-          risk_commercial: 4,
-          risk_ip: 4,
-          risk_funding: 4,
-          risk_revenue: 4,
-        },
-        notes: {},
-        keyStrengths: 'Serial biotech entrepreneurs with proven track record in stem cell biology.',
-        supportNeeded: 'Liquid nitrogen cryogenic dewars calibration.',
-        isSubmitted: true,
-      })),
-    };
-  });
-
   const [toast, setToast] = useState<ToastState | null>(null);
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isPitchDeckModalOpen, setIsPitchDeckModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
-  // Sync to local storage
+  // Sync state to local storage (metadata only, zero file binaries)
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(companies));
       localStorage.setItem(STORAGE_KEYS.ACTIVE_COMPANY, activeCompanyId);
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_MEETING, activeMeetingId);
       localStorage.setItem(STORAGE_KEYS.EVALUATIONS, JSON.stringify(evaluationsByCompany));
       localStorage.setItem(STORAGE_KEYS.QUESTIONS, JSON.stringify(questions));
       localStorage.setItem(STORAGE_KEYS.SECTION_HEADERS, JSON.stringify(sectionHeaders));
     } catch {
       // ignore
     }
-  }, [companies, activeCompanyId, evaluationsByCompany, questions, sectionHeaders]);
+  }, [companies, activeCompanyId, activeMeetingId, evaluationsByCompany, questions, sectionHeaders]);
 
   const triggerToast = (title: string, message: string, type: 'success' | 'info' | 'warning' = 'success') => {
     setToast({ show: true, title, message, type });
@@ -342,19 +430,76 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
     }, 4000);
   };
 
-  // Active Company
-  const company = useMemo(() => {
-    return companies.find((c) => c.id === activeCompanyId) || companies[0] || INITIAL_COMPANY;
-  }, [companies, activeCompanyId]);
+  // Active Meeting
+  const activeMeeting = useMemo(() => {
+    if (!company.meetings || company.meetings.length === 0) {
+      return undefined;
+    }
+    return company.meetings.find((m) => m.id === activeMeetingId) || company.meetings[0];
+  }, [company, activeMeetingId]);
 
-  // Reviewers for the currently active company
+  // Meetings for the active company
+  const meetings = useMemo(() => {
+    return company.meetings || [];
+  }, [company]);
+
+  // Reviewers for the currently active meeting (falls back to legacy company map if needed)
   const reviewers = useMemo(() => {
-    return evaluationsByCompany[activeCompanyId] || INITIAL_REVIEWERS;
-  }, [evaluationsByCompany, activeCompanyId]);
+    return activeMeeting?.reviewers || evaluationsByCompany[activeCompanyId] || INITIAL_REVIEWERS;
+  }, [activeMeeting, evaluationsByCompany, activeCompanyId]);
 
   const currentReviewer = useMemo(() => {
     return reviewers.find((r) => r.id === activeReviewerId) || reviewers[0];
   }, [reviewers, activeReviewerId]);
+
+  // Contract Details & Documents (belonging to active organization)
+  const contractDetails = useMemo(() => {
+    return company.contractDetails || DEFAULT_CONTRACT_DETAILS;
+  }, [company]);
+
+  const contractDocuments = useMemo(() => {
+    return company.contractDocuments || [];
+  }, [company]);
+
+  const contactDetails = useMemo(() => {
+    return company.contactDetails || DEFAULT_CONTACT_DETAILS;
+  }, [company]);
+
+  const applicationInfo = useMemo(() => {
+    return company.applicationInfo || DEFAULT_APPLICATION_INFO;
+  }, [company]);
+
+  // Helper to update active meeting's reviewers while keeping legacy evaluationsByCompany in sync
+  const updateActiveMeetingReviewers = (
+    updater: (prevReviewers: ReviewerScoreRecord[]) => ReviewerScoreRecord[]
+  ) => {
+    setCompanies((prevCompanies) =>
+      prevCompanies.map((c) => {
+        if (c.id === activeCompanyId) {
+          const targetMeetingId = activeMeeting?.id || c.meetings?.[0]?.id;
+          const updatedMeetings = (c.meetings || []).map((m) => {
+            if (m.id === targetMeetingId) {
+              return { ...m, reviewers: updater(m.reviewers || INITIAL_REVIEWERS) };
+            }
+            return m;
+          });
+          return { ...c, meetings: updatedMeetings };
+        }
+        return c;
+      })
+    );
+
+    // If on initial pitch, also update evaluationsByCompany for backwards compatibility
+    if (!activeMeeting || activeMeeting.type === 'Initial Pitch') {
+      setEvaluationsByCompany((prev) => {
+        const currentList = prev[activeCompanyId] || reviewers;
+        return {
+          ...prev,
+          [activeCompanyId]: updater(currentList),
+        };
+      });
+    }
+  };
 
   // Company management actions
   const updateCompany = (updates: Partial<CompanyAssessment>) => {
@@ -371,15 +516,42 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const addNewCompany = (companyData?: Partial<CompanyAssessment>): string => {
     const newId = `company_${Date.now()}`;
+    const initialMeetingId = `${newId}_pitch`;
+    const reviewDate =
+      companyData?.reviewDate ||
+      new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    const initialMeeting: MeetingRecord = {
+      id: initialMeetingId,
+      organizationId: newId,
+      type: 'Initial Pitch',
+      title: `${companyData?.name?.trim() || 'New Bioscience Applicant'} - Initial Pitch Evaluation`,
+      date: reviewDate,
+      deckTitle: 'Initial Pitch Deck.pdf',
+      deckSlideCount: 12,
+      reviewers: createBlankReviewerSet(),
+      feedbackSummary: DEFAULT_FEEDBACK_SECTIONS.map((sec) => ({
+        ...sec,
+        summary: '',
+        quotes: [],
+      })),
+      status: 'In Progress',
+    };
+
     const newComp: CompanyAssessment = {
       id: newId,
       name: companyData?.name?.trim() || 'New Bioscience Applicant',
       round: companyData?.round || 'Round 1 Evaluation',
       cohort: companyData?.cohort || 'Cohort 2026.1 Assessment',
-      reviewDate: companyData?.reviewDate || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      reviewDate,
       domain: companyData?.domain || 'Biotechnology / Therapeutics',
       admissionStatus: companyData?.admissionStatus || 'Pending',
       thresholdScore: companyData?.thresholdScore || 3.5,
+      contactDetails: DEFAULT_CONTACT_DETAILS,
+      applicationInfo: DEFAULT_APPLICATION_INFO,
+      contractDetails: DEFAULT_CONTRACT_DETAILS,
+      contractDocuments: [],
+      meetings: [initialMeeting],
     };
 
     setCompanies((prev) => [...prev, newComp]);
@@ -388,6 +560,7 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
       [newId]: createBlankReviewerSet(),
     }));
     setActiveCompanyId(newId);
+    setActiveMeetingId(initialMeetingId);
     triggerToast('Company Created', `Added ${newComp.name}. Scorecard is ready for evaluation!`);
     return newId;
   };
@@ -401,6 +574,7 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
     setCompanies(remaining);
     if (activeCompanyId === companyId) {
       setActiveCompanyId(remaining[0].id);
+      setActiveMeetingId(remaining[0].meetings?.[0]?.id || `${remaining[0].id}_pitch`);
     }
     setEvaluationsByCompany((prev) => {
       const next = { ...prev };
@@ -410,25 +584,312 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
     triggerToast('Company Removed', 'The company evaluation has been deleted.');
   };
 
+  const importCompanies = (importedList: CompanyAssessment[]) => {
+    if (!importedList || importedList.length === 0) return;
+
+    setCompanies((prev) => {
+      const existingMap = new Map(prev.map((c) => [c.id, c]));
+
+      importedList.forEach((incoming) => {
+        const existing = existingMap.get(incoming.id);
+
+        if (existing) {
+          // Re-importing into an existing company:
+          // CRITICAL: DO NOT overwrite existing user-edited company details,
+          // contracts, documents, or evaluation records.
+          const merged: CompanyAssessment = {
+            ...existing, // preserve existing identity, admissionStatus, thresholdScore
+            name: existing.name || incoming.name,
+            domain:
+              existing.domain && existing.domain !== 'Biotechnology'
+                ? existing.domain
+                : incoming.domain || existing.domain,
+            // Update intake application info while preserving existing additional fields
+            applicationInfo: {
+              ...(incoming.applicationInfo || DEFAULT_APPLICATION_INFO),
+              additionalFields: {
+                ...(incoming.applicationInfo?.additionalFields || {}),
+                ...(existing.applicationInfo?.additionalFields || {}),
+              },
+            },
+            // Merge contact details without overwriting user-provided edits
+            contactDetails: {
+              primaryContactName:
+                existing.contactDetails?.primaryContactName &&
+                existing.contactDetails.primaryContactName !== 'Not provided'
+                  ? existing.contactDetails.primaryContactName
+                  : incoming.contactDetails?.primaryContactName || 'Not provided',
+              roleOrTitle:
+                existing.contactDetails?.roleOrTitle &&
+                existing.contactDetails.roleOrTitle !== 'Not provided'
+                  ? existing.contactDetails.roleOrTitle
+                  : incoming.contactDetails?.roleOrTitle || 'Not provided',
+              email:
+                existing.contactDetails?.email && existing.contactDetails.email !== 'Not provided'
+                  ? existing.contactDetails.email
+                  : incoming.contactDetails?.email || 'Not provided',
+              phone:
+                existing.contactDetails?.phone && existing.contactDetails.phone !== 'Not provided'
+                  ? existing.contactDetails.phone
+                  : incoming.contactDetails?.phone || 'Not provided',
+              website:
+                existing.contactDetails?.website && existing.contactDetails.website !== 'Not provided'
+                  ? existing.contactDetails.website
+                  : incoming.contactDetails?.website || 'Not provided',
+              linkedIn:
+                existing.contactDetails?.linkedIn && existing.contactDetails.linkedIn !== 'Not provided'
+                  ? existing.contactDetails.linkedIn
+                  : incoming.contactDetails?.linkedIn || 'Not provided',
+              mailingAddress:
+                existing.contactDetails?.mailingAddress &&
+                existing.contactDetails.mailingAddress !== 'Not provided'
+                  ? existing.contactDetails.mailingAddress
+                  : incoming.contactDetails?.mailingAddress || 'Not provided',
+            },
+            // STRICTLY PRESERVE all existing contract details, documents, and meetings/evaluations
+            contractDetails: existing.contractDetails || DEFAULT_CONTRACT_DETAILS,
+            contractDocuments: existing.contractDocuments || [],
+            meetings:
+              existing.meetings && existing.meetings.length > 0
+                ? existing.meetings
+                : incoming.meetings || [],
+          };
+
+          existingMap.set(incoming.id, merged);
+        } else {
+          // Brand new company entry: migrate cleanly
+          const migrated = migrateCompanyRecord(incoming, evaluationsByCompany);
+          existingMap.set(incoming.id, migrated);
+        }
+      });
+
+      return Array.from(existingMap.values());
+    });
+
+    // Update evaluationsByCompany ONLY for brand-new companies; never overwrite existing evaluations
+    setEvaluationsByCompany((prev) => {
+      const next = { ...prev };
+      importedList.forEach((c) => {
+        if (!next[c.id]) {
+          const pitchMeeting = c.meetings?.find((m) => m.type === 'Initial Pitch');
+          next[c.id] = pitchMeeting?.reviewers || createBlankReviewerSet();
+        }
+      });
+      return next;
+    });
+
+    if (importedList[0]) {
+      setActiveCompanyId(importedList[0].id);
+      const targetMeetingId = importedList[0].meetings?.[0]?.id || `${importedList[0].id}_pitch`;
+      setActiveMeetingId(targetMeetingId);
+    }
+
+    triggerToast(
+      'Applications Imported',
+      `Imported ${importedList.length} company application${importedList.length > 1 ? 's' : ''}. Existing evaluations and contracts preserved.`,
+      'success'
+    );
+  };
+
+  // Meeting management actions
+  const createInitialPitch = (date?: string, title?: string): string => {
+    const pitchId = `${activeCompanyId}_pitch`;
+    const pitchDate =
+      date?.trim() ||
+      company.reviewDate ||
+      new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    const newMeeting: MeetingRecord = {
+      id: pitchId,
+      organizationId: activeCompanyId,
+      type: 'Initial Pitch',
+      title: title?.trim() || `${company.name} - Initial Pitch Evaluation`,
+      date: pitchDate,
+      deckTitle: `${company.name} Pitch Deck.pdf`,
+      deckSlideCount: 12,
+      reviewers: createBlankReviewerSet(),
+      feedbackSummary: DEFAULT_FEEDBACK_SECTIONS,
+      status: 'In Progress',
+    };
+
+    setCompanies((prev) =>
+      prev.map((c) => {
+        if (c.id === activeCompanyId) {
+          return {
+            ...c,
+            meetings: [newMeeting, ...(c.meetings || [])],
+          };
+        }
+        return c;
+      })
+    );
+
+    setActiveMeetingId(pitchId);
+    triggerToast('Initial Pitch Created', `Created Initial Pitch meeting for ${company.name}.`);
+    return pitchId;
+  };
+
+  const addProgressCheckin = (date: string, title?: string): string => {
+    const newId = `${activeCompanyId}_checkin_${Date.now()}`;
+    const newMeeting: MeetingRecord = {
+      id: newId,
+      organizationId: activeCompanyId,
+      type: 'Progress Check-in',
+      title: title?.trim() || `Progress Check-in (${date.trim()})`,
+      date: date.trim(),
+      deckTitle: `${company.name} Progress Check-in Deck.pdf`,
+      deckSlideCount: 8,
+      reviewers: createBlankReviewerSet(),
+      feedbackSummary: DEFAULT_FEEDBACK_SECTIONS.map((sec) => ({
+        ...sec,
+        summary: '',
+        quotes: [],
+      })),
+      status: 'In Progress',
+    };
+
+    setCompanies((prev) =>
+      prev.map((c) => {
+        if (c.id === activeCompanyId) {
+          return {
+            ...c,
+            meetings: [...(c.meetings || []), newMeeting],
+          };
+        }
+        return c;
+      })
+    );
+
+    setActiveMeetingId(newId);
+    triggerToast('Progress Check-in Added', `Scheduled check-in on ${date}. Meeting has access to company contract.`);
+    return newId;
+  };
+
+  const updateMeetingFeedback = (meetingId: string, feedbackSections: FeedbackSectionData[]) => {
+    setCompanies((prev) =>
+      prev.map((c) => {
+        if (c.id === activeCompanyId) {
+          return {
+            ...c,
+            meetings: (c.meetings || []).map((m) => {
+              if (m.id === meetingId) {
+                return { ...m, feedbackSummary: feedbackSections };
+              }
+              return m;
+            }),
+          };
+        }
+        return c;
+      })
+    );
+  };
+
+  // Contract Details & Documents actions
+  const updateContractDetails = (updates: Partial<OrganizationContractDetails>) => {
+    setCompanies((prev) =>
+      prev.map((c) => {
+        if (c.id === activeCompanyId) {
+          return {
+            ...c,
+            contractDetails: {
+              ...(c.contractDetails || DEFAULT_CONTRACT_DETAILS),
+              ...updates,
+            },
+          };
+        }
+        return c;
+      })
+    );
+    triggerToast('Contract Terms Updated', 'Organization contract and facility space terms saved.');
+  };
+
+  const addContractDocument = (doc: {
+    title: string;
+    documentType: ContractDocumentType;
+    fileSize?: string;
+    fileType?: string;
+    uploadedDuringMeetingId?: string;
+  }): string => {
+    const newDocId = `doc_${Date.now()}`;
+    const newDoc: ContractDocument = {
+      id: newDocId,
+      organizationId: activeCompanyId,
+      title: doc.title.trim(),
+      documentType: doc.documentType,
+      uploadedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      fileSize: doc.fileSize || '1.2 MB',
+      fileType: doc.fileType || 'application/pdf',
+      uploadedDuringMeetingId: doc.uploadedDuringMeetingId || activeMeetingId,
+    };
+
+    setCompanies((prev) =>
+      prev.map((c) => {
+        if (c.id === activeCompanyId) {
+          return {
+            ...c,
+            contractDocuments: [...(c.contractDocuments || []), newDoc],
+          };
+        }
+        return c;
+      })
+    );
+
+    triggerToast('Document Attached', `Added "${newDoc.title}" to ${company.name} records.`);
+    return newDocId;
+  };
+
+  // Contact Details & Application Info actions
+  const updateContactDetails = (updates: Partial<OrganizationContactDetails>) => {
+    setCompanies((prev) =>
+      prev.map((c) => {
+        if (c.id === activeCompanyId) {
+          return {
+            ...c,
+            contactDetails: {
+              ...(c.contactDetails || DEFAULT_CONTACT_DETAILS),
+              ...updates,
+            },
+          };
+        }
+        return c;
+      })
+    );
+    triggerToast('Contacts Updated', 'Organization contact details updated.');
+  };
+
+  const updateApplicationInfo = (updates: Partial<ApplicationIntakeInfo>) => {
+    setCompanies((prev) =>
+      prev.map((c) => {
+        if (c.id === activeCompanyId) {
+          return {
+            ...c,
+            applicationInfo: {
+              ...(c.applicationInfo || DEFAULT_APPLICATION_INFO),
+              ...updates,
+            },
+          };
+        }
+        return c;
+      })
+    );
+    triggerToast('Application Info Updated', 'Original application and intake information saved.');
+  };
+
   // Reviewer info update
   const updateReviewerInfo = (name: string, title?: string, role?: string) => {
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            return {
-              ...r,
-              name,
-              title: title !== undefined ? title : r.title,
-              role: role !== undefined ? role : r.role,
-            };
-          }
-          return r;
-        }),
-      };
-    });
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          return {
+            ...r,
+            name,
+            title: title !== undefined ? title : r.title,
+            role: role !== undefined ? role : r.role,
+          };
+        }
+        return r;
+      })
+    );
   };
 
   const addNewReviewer = (name: string, title?: string, role?: string): string => {
@@ -454,6 +915,16 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
       isSubmitted: false,
     };
 
+    setCompanies((prev) =>
+      prev.map((c) => ({
+        ...c,
+        meetings: (c.meetings || []).map((m) => ({
+          ...m,
+          reviewers: [...m.reviewers, { ...newRev }],
+        })),
+      }))
+    );
+
     setEvaluationsByCompany((prev) => {
       const next = { ...prev };
       Object.keys(next).forEach((compId) => {
@@ -467,50 +938,39 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
     return newId;
   };
 
-  // Scoring actions for active company
+  // Scoring actions (mutate active meeting's reviewers)
   const setScore = (questionId: string, rating: RatingValue | undefined) => {
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            const nextScores = { ...r.scores };
-            if (rating === undefined) {
-              delete nextScores[questionId];
-            } else {
-              nextScores[questionId] = rating;
-            }
-            return {
-              ...r,
-              scores: nextScores,
-            };
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          const nextScores = { ...r.scores };
+          if (rating === undefined) {
+            delete nextScores[questionId];
+          } else {
+            nextScores[questionId] = rating;
           }
-          return r;
-        }),
-      };
-    });
+          return { ...r, scores: nextScores };
+        }
+        return r;
+      })
+    );
   };
 
   const setQuestionNote = (questionId: string, noteText: string) => {
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            return {
-              ...r,
-              notes: {
-                ...(r.notes || {}),
-                [questionId]: noteText,
-              },
-            };
-          }
-          return r;
-        }),
-      };
-    });
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          return {
+            ...r,
+            notes: {
+              ...(r.notes || {}),
+              [questionId]: noteText,
+            },
+          };
+        }
+        return r;
+      })
+    );
   };
 
   const updateCriteriaDefinition = (questionId: string, updates: Partial<QuestionCriterion>) => {
@@ -580,124 +1040,100 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const clearScorecard = () => {
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            return {
-              ...r,
-              scores: {},
-              notes: {},
-              keyStrengths: '',
-              supportNeeded: '',
-              isSubmitted: false,
-            };
-          }
-          return r;
-        }),
-      };
-    });
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          return {
+            ...r,
+            scores: {},
+            notes: {},
+            keyStrengths: '',
+            supportNeeded: '',
+            isSubmitted: false,
+          };
+        }
+        return r;
+      })
+    );
     triggerToast('Scorecard Cleared', 'All ratings and notes reset for this evaluator.');
   };
 
   const updateReviewerSummary = (strengths: string, support: string) => {
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            return {
-              ...r,
-              keyStrengths: strengths,
-              supportNeeded: support,
-            };
-          }
-          return r;
-        }),
-      };
-    });
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          return {
+            ...r,
+            keyStrengths: strengths,
+            supportNeeded: support,
+          };
+        }
+        return r;
+      })
+    );
     triggerToast('Summary Updated', 'Your qualitative observations have been updated.');
   };
 
   const setCategoryRating = (categoryKey: string, rating: number) => {
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            return {
-              ...r,
-              categoryRatings: {
-                ...(r.categoryRatings || {}),
-                [categoryKey]: rating,
-              },
-            };
-          }
-          return r;
-        }),
-      };
-    });
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          return {
+            ...r,
+            categoryRatings: {
+              ...(r.categoryRatings || {}),
+              [categoryKey]: rating,
+            },
+          };
+        }
+        return r;
+      })
+    );
   };
 
   const setRecommendation = (recommendation: RecommendationDecision) => {
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            return {
-              ...r,
-              recommendation,
-            };
-          }
-          return r;
-        }),
-      };
-    });
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          return {
+            ...r,
+            recommendation,
+          };
+        }
+        return r;
+      })
+    );
   };
 
   const setOverallSummary = (summary: string) => {
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            return {
-              ...r,
-              overallSummary: summary,
-            };
-          }
-          return r;
-        }),
-      };
-    });
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          return {
+            ...r,
+            overallSummary: summary,
+          };
+        }
+        return r;
+      })
+    );
   };
 
   const setSectionComment = (categoryKey: string, comment: string) => {
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            return {
-              ...r,
-              sectionComments: {
-                ...(r.sectionComments || {}),
-                [categoryKey]: comment,
-              },
-            };
-          }
-          return r;
-        }),
-      };
-    });
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          return {
+            ...r,
+            sectionComments: {
+              ...(r.sectionComments || {}),
+              [categoryKey]: comment,
+            },
+          };
+        }
+        return r;
+      })
+    );
   };
 
   // Helper to compute category average for a specific reviewer
@@ -746,7 +1182,7 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
       .every((q) => currentReviewer.scores[q.id] !== undefined);
   }, [questions, currentReviewer]);
 
-  // Committee matrix calculations across all reviewers for active company
+  // Committee matrix calculations across all reviewers for active meeting
   const committeeMatrix = useMemo(() => {
     const reviewerRows = reviewers.map((rev) => {
       const computed = computeReviewerCategoryScores(rev);
@@ -781,53 +1217,40 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const saveProgress = () => {
     const timestamp = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            return {
-              ...r,
-              lastSavedAt: `Last saved ${timestamp}`,
-            };
-          }
-          return r;
-        }),
-      };
-    });
-    try {
-      localStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(companies));
-      localStorage.setItem(STORAGE_KEYS.EVALUATIONS, JSON.stringify(evaluationsByCompany));
-      triggerToast('Draft Saved', `Evaluation draft for ${company.name} saved successfully.`);
-    } catch {
-      triggerToast('Notice', 'Scorecard state saved to session memory.', 'info');
-    }
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          return {
+            ...r,
+            lastSavedAt: `Last saved ${timestamp}`,
+          };
+        }
+        return r;
+      })
+    );
+    triggerToast('Draft Saved', `Evaluation draft for ${company.name} saved successfully.`);
   };
 
   const submitScorecard = () => {
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            return {
-              ...r,
-              isSubmitted: true,
-              submittedAt: new Date().toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              }),
-            };
-          }
-          return r;
-        }),
-      };
+    const submittedAt = new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          return {
+            ...r,
+            isSubmitted: true,
+            submittedAt,
+          };
+        }
+        return r;
+      })
+    );
     triggerToast(
       'Scorecard Submitted',
       `Scorecard for ${currentReviewer.name} (${company.name}) submitted to the committee record!`,
@@ -836,21 +1259,17 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const reopenScorecard = () => {
-    setEvaluationsByCompany((prev) => {
-      const companyRevList = prev[activeCompanyId] || reviewers;
-      return {
-        ...prev,
-        [activeCompanyId]: companyRevList.map((r) => {
-          if (r.id === activeReviewerId) {
-            return {
-              ...r,
-              isSubmitted: false,
-            };
-          }
-          return r;
-        }),
-      };
-    });
+    updateActiveMeetingReviewers((prevRevs) =>
+      prevRevs.map((r) => {
+        if (r.id === activeReviewerId) {
+          return {
+            ...r,
+            isSubmitted: false,
+          };
+        }
+        return r;
+      })
+    );
     triggerToast(
       'Submission Reopened',
       `Scorecard for ${currentReviewer.name} is now editable.`,
@@ -870,6 +1289,7 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
   const resetToDefaults = () => {
     setCompanies(INITIAL_COMPANIES);
     setActiveCompanyId('vayim');
+    setActiveMeetingId('vayim_initial_pitch');
     setQuestions(QUESTIONS_DATA);
     setSectionHeaders(DEFAULT_SECTION_HEADERS);
     setEvaluationsByCompany({
@@ -877,6 +1297,7 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
     });
     localStorage.removeItem(STORAGE_KEYS.COMPANIES);
     localStorage.removeItem(STORAGE_KEYS.ACTIVE_COMPANY);
+    localStorage.removeItem(STORAGE_KEYS.ACTIVE_MEETING);
     localStorage.removeItem(STORAGE_KEYS.EVALUATIONS);
     localStorage.removeItem(STORAGE_KEYS.QUESTIONS);
     localStorage.removeItem(STORAGE_KEYS.SECTION_HEADERS);
@@ -902,6 +1323,21 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
         deleteCompany,
         isCompanyModalOpen,
         setIsCompanyModalOpen,
+        activeMeetingId,
+        setActiveMeetingId,
+        activeMeeting,
+        meetings,
+        addProgressCheckin,
+        createInitialPitch,
+        updateMeetingFeedback,
+        contractDetails,
+        updateContractDetails,
+        contractDocuments,
+        addContractDocument,
+        contactDetails,
+        updateContactDetails,
+        applicationInfo,
+        updateApplicationInfo,
         questions,
         sectionHeaders,
         updateSectionHeader,
@@ -934,6 +1370,9 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
         setIsEmailModalOpen,
         isPitchDeckModalOpen,
         setIsPitchDeckModalOpen,
+        isImportModalOpen,
+        setIsImportModalOpen,
+        importCompanies,
       }}
     >
       {children}

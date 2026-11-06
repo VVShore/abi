@@ -82,6 +82,91 @@ export interface EvaluationTopic {
   quotes: TopicQuote[];
 }
 
+// ---------------------------------------------------------------------------
+// Single Company / Organization & Meeting Architecture
+// ---------------------------------------------------------------------------
+
+export interface FeedbackSectionData {
+  id: string;
+  title: string;
+  prompt: string;
+  summary: string;
+  quotes?: string[];
+  categoryScoreKey?: 'team' | 'market' | 'fit' | 'risk';
+}
+
+export interface OrganizationContactDetails {
+  primaryContactName: string;
+  roleOrTitle: string;
+  email: string;
+  phone: string;
+  website: string;
+  linkedIn?: string;
+  mailingAddress?: string;
+}
+
+export interface ApplicationIntakeInfo {
+  submittedAt: string;
+  executiveSummary: string;
+  problemStatement: string;
+  proposedSolution: string;
+  stageOfDevelopment: string;
+  targetMarket: string;
+  teamBackground: string;
+  fundingRaisedToDate: string;
+  spaceRequirements: string;
+  additionalFields?: Record<string, string>;
+}
+
+export interface OrganizationContractDetails {
+  status: 'Draft' | 'Active' | 'Pending Execution' | 'Completed' | 'Terminated';
+  agreementDate: string;
+  effectiveStartDate: string;
+  termEndDate: string;
+  monthlyFee: string;
+  securityDeposit: string;
+  billingCadence: string;
+  rooms: string[];
+  benches: string[];
+  instrumentAccess: string[];
+  specialConditions: string;
+}
+
+export type ContractDocumentType =
+  | 'Original Contract'
+  | 'Amendment'
+  | 'Addendum'
+  | 'Protocol'
+  | 'Pitch Deck'
+  | 'Other';
+
+export interface ContractDocument {
+  id: string;
+  organizationId: string;
+  title: string;
+  documentType: ContractDocumentType;
+  uploadedAt: string;
+  fileSize?: string;
+  fileType?: string;
+  uploadedDuringMeetingId?: string; // Optionally records the meeting during which it was uploaded
+}
+
+export type MeetingType = 'Initial Pitch' | 'Progress Check-in';
+
+export interface MeetingRecord {
+  id: string;
+  organizationId: string;
+  type: MeetingType;
+  title: string;
+  date: string;
+  deckTitle?: string;
+  deckSlideCount?: number;
+  deckDocumentId?: string;
+  reviewers: ReviewerScoreRecord[];
+  feedbackSummary: FeedbackSectionData[];
+  status: 'Completed' | 'In Progress' | 'Scheduled';
+}
+
 export interface CompanyAssessment {
   id: string;
   name: string;
@@ -91,4 +176,12 @@ export interface CompanyAssessment {
   domain: string;
   admissionStatus: 'Approved' | 'Pending' | 'Declined';
   thresholdScore: number;
+  // Organization Extensions
+  contactDetails?: OrganizationContactDetails;
+  applicationInfo?: ApplicationIntakeInfo;
+  contractDetails?: OrganizationContractDetails;
+  contractDocuments?: ContractDocument[];
+  meetings?: MeetingRecord[];
 }
+
+export type Organization = CompanyAssessment;

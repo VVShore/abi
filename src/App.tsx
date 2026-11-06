@@ -7,6 +7,7 @@ import { PitchFeedbackReportView } from './components/PitchFeedbackReportView';
 import { CompanyModal } from './components/CompanyModal';
 import { PitchDeckModal } from './components/PitchDeckModal';
 import { EmailModal } from './components/EmailModal';
+import { ImportApplicationsModal } from './components/ImportApplicationsModal';
 import { Toast } from './components/Toast';
 import { AbiLogo } from './components/AbiLogo';
 
@@ -59,6 +60,7 @@ const EvaluationMainContent: React.FC = () => {
       <CompanyModal />
       <PitchDeckModal />
       <EmailModal />
+      <ImportApplicationsModal />
       <Toast />
     </div>
   );

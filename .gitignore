@@ -6,3 +6,10 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Confidential runtime workbooks and spreadsheets (never commit or bundle)
+*.xlsx
+*.xls
+*.csv
+*.xlsm
+*.ods
