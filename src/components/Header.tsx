@@ -72,7 +72,8 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b-2 border-slate-200/90 shadow-xs print:hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-3">
+      {/* Top Row: Logo on left, Import, Applicant, Meeting, and Reviewer controls on right */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
         {/* Brand Lockup with Official Wireframe Logo */}
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           <AbiLogo size={40} showText={true} />
@@ -89,52 +90,13 @@ export const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Central Screen Navigation Tabs */}
-        <nav className="hidden lg:flex items-center gap-1 bg-slate-100/90 p-1.5 rounded-xl border border-slate-200">
-          <button
-            onClick={() => setActiveScreen('individual')}
-            className={`px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
-              activeScreen === 'individual'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-slate-700 hover:bg-white hover:text-slate-900'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">fact_check</span>
-            Individual Scorecard
-          </button>
-
-          <button
-            onClick={() => setActiveScreen('report')}
-            className={`px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
-              activeScreen === 'report'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-slate-700 hover:bg-white hover:text-slate-900'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">description</span>
-            Committee Insights
-          </button>
-
-          <button
-            onClick={() => setActiveScreen('committee')}
-            className={`px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
-              activeScreen === 'committee'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-slate-700 hover:bg-white hover:text-slate-900'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">groups</span>
-            Feedback Summary
-          </button>
-        </nav>
-
-        {/* Right Section: Controls, Company Switcher, Meeting Selector & Reviewer Selector */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Right Section: Import, Applicant, Meeting, and Reviewer Controls */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           {/* Quick Import Control */}
           <button
             type="button"
             onClick={() => setIsImportModalOpen(true)}
-            className="hidden sm:flex items-center gap-1.5 bg-white hover:bg-[#F2F9EC] border border-slate-200 hover:border-[#78BE20]/60 text-slate-700 hover:text-[#431A4D] px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0"
+            className="flex items-center gap-1.5 bg-white hover:bg-[#F2F9EC] border border-slate-200 hover:border-[#78BE20]/60 text-slate-700 hover:text-[#431A4D] px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0"
             title="Import real ABI applications from local .xlsx workbook"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-[#78BE20]" />
@@ -557,38 +519,53 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Screen Switcher Bar */}
-      <div className="lg:hidden border-t border-slate-200 bg-slate-50 px-4 py-2 flex items-center justify-between gap-1 overflow-x-auto">
-        <button
-          onClick={() => setActiveScreen('individual')}
-          className={`flex-1 min-w-[110px] py-1.5 px-2 rounded-lg text-xs font-bold text-center cursor-pointer ${
-            activeScreen === 'individual'
-              ? 'bg-primary text-white shadow-2xs'
-              : 'text-slate-600 hover:bg-white'
-          }`}
-        >
-          Scorecard
-        </button>
-        <button
-          onClick={() => setActiveScreen('report')}
-          className={`flex-1 min-w-[110px] py-1.5 px-2 rounded-lg text-xs font-bold text-center cursor-pointer ${
-            activeScreen === 'report'
-              ? 'bg-primary text-white shadow-2xs'
-              : 'text-slate-600 hover:bg-white'
-          }`}
-        >
-          Committee Insights
-        </button>
-        <button
-          onClick={() => setActiveScreen('committee')}
-          className={`flex-1 min-w-[110px] py-1.5 px-2 rounded-lg text-xs font-bold text-center cursor-pointer ${
-            activeScreen === 'committee'
-              ? 'bg-primary text-white shadow-2xs'
-              : 'text-slate-600 hover:bg-white'
-          }`}
-        >
-          Feedback Summary
-        </button>
+      {/* Separate Tab Bar Directly Below Top Row */}
+      <div className="border-t border-slate-200/90 bg-slate-50/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-2">
+          <nav
+            aria-label="Evaluation Views"
+            className="flex flex-wrap items-center gap-1.5 sm:gap-2"
+          >
+            <button
+              type="button"
+              onClick={() => setActiveScreen('individual')}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                activeScreen === 'individual'
+                  ? 'bg-primary text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white hover:text-slate-900 border border-transparent hover:border-slate-200'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">fact_check</span>
+              <span>Individual Scorecard</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveScreen('report')}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                activeScreen === 'report'
+                  ? 'bg-primary text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white hover:text-slate-900 border border-transparent hover:border-slate-200'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">description</span>
+              <span>Committee Insights</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveScreen('committee')}
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                activeScreen === 'committee'
+                  ? 'bg-primary text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white hover:text-slate-900 border border-transparent hover:border-slate-200'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">groups</span>
+              <span>Feedback Summary</span>
+            </button>
+          </nav>
+        </div>
       </div>
     </header>
   );

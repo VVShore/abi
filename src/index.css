@@ -78,18 +78,24 @@
 }
 
 @media print {
+  @page {
+    size: letter;
+    margin: 0.7in 0.8in;
+  }
   body {
     background-color: white !important;
     color: black !important;
-    font-size: 14pt;
+    font-size: 11pt;
   }
-  header, footer, button, .print\:hidden {
+  nav, button, .print\:hidden {
     display: none !important;
   }
-  section, article {
-    break-inside: avoid;
+  h2, h3, h4 {
+    break-after: avoid;
+  }
+  article {
     box-shadow: none !important;
-    border-color: #cbd5e1 !important;
+    border: 0 !important;
   }
 }
 

@@ -28,7 +28,7 @@ const EvaluationMainContent: React.FC = () => {
 
       {/* Clean, Official Institutional Footer matching https://sites.austincc.edu/incubator/ */}
       <footer className="w-full bg-white border-t-2 border-slate-200/90 py-6 text-sm text-slate-500 print:hidden mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div className="flex items-center gap-3 flex-wrap justify-center sm:justify-start">
             <AbiLogo size={28} />
             <a

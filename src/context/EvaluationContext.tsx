@@ -23,7 +23,9 @@ import {
   DEFAULT_CONTRACT_DETAILS,
   DEFAULT_CONTACT_DETAILS,
   DEFAULT_APPLICATION_INFO,
+  migrateMeetingFeedbackSections,
 } from '../data/mockData';
+import { SYNTHETIC_SOLARIS_COMPANY } from '../fixtures/syntheticFixture';
 
 export type ScreenType = 'individual' | 'committee' | 'report';
 
@@ -89,6 +91,14 @@ export interface EvaluationContextType {
   addProgressCheckin: (date: string, title?: string) => string;
   createInitialPitch: (date?: string, title?: string) => string;
   updateMeetingFeedback: (meetingId: string, feedbackSections: FeedbackSectionData[]) => void;
+  activeMeetingFeedback: FeedbackSectionData[];
+  createGenerationToken: () => { companyId: string; meetingId: string; editRevision: number };
+  applyGeneratedFeedbackDraft: (
+    meetingId: string,
+    newSections: FeedbackSectionData[],
+    token: { companyId: string; meetingId: string; editRevision: number }
+  ) => boolean;
+  getMeetingDraftRevision: (meetingId: string) => number;
 
   // Contract Details & Documents (belongs to active organization)
   contractDetails: OrganizationContractDetails;
@@ -145,6 +155,14 @@ export interface EvaluationContextType {
       riskAvg: number;
       overallAvg: number;
     }[];
+    submittedReviewerRows: {
+      reviewer: ReviewerScoreRecord;
+      teamAvg: number;
+      marketAvg: number;
+      fitAvg: number;
+      riskAvg: number;
+      overallAvg: number;
+    }[];
     categoryAverages: {
       team: number;
       market: number;
@@ -152,6 +170,8 @@ export interface EvaluationContextType {
       risk: number;
       total: number;
     };
+    submittedCount: number;
+    totalCount: number;
   };
 
   // Actions
@@ -235,10 +255,13 @@ const migrateCompanyRecord = (
     ? comp.contractDocuments
     : [];
 
-  // 5. Meetings migration: if already populated, keep intact
+  // 5. Meetings migration: if already populated, keep intact and safely migrate feedback sections
   let meetings: MeetingRecord[] = [];
   if (Array.isArray(comp.meetings) && comp.meetings.length > 0) {
-    meetings = comp.meetings;
+    meetings = comp.meetings.map((m) => ({
+      ...m,
+      feedbackSummary: migrateMeetingFeedbackSections(m.feedbackSummary),
+    }));
   } else {
     // Check if there is an unambiguous historical evaluation record for this company
     const historicalEvals = savedEvaluations[comp.id];
@@ -254,7 +277,7 @@ const migrateCompanyRecord = (
         historicalEvals && Array.isArray(historicalEvals) && historicalEvals.length > 0
           ? historicalEvals
           : createBlankReviewerSet(),
-      feedbackSummary: DEFAULT_FEEDBACK_SECTIONS,
+      feedbackSummary: migrateMeetingFeedbackSections(DEFAULT_FEEDBACK_SECTIONS),
       status: comp.admissionStatus === 'Approved' ? 'Completed' : 'In Progress',
     };
     meetings = [initialPitchMeeting];
@@ -300,7 +323,9 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((c) => migrateCompanyRecord(c, evaluationsByCompany));
+          const hasSolaris = parsed.some((c) => c.id === 'solaris_bio');
+          const fullList = hasSolaris ? parsed : [SYNTHETIC_SOLARIS_COMPANY, ...parsed];
+          return fullList.map((c) => migrateCompanyRecord(c, evaluationsByCompany));
         }
       }
     } catch {
@@ -791,10 +816,30 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
     return newId;
   };
 
+  const [meetingDraftRevisions, setMeetingDraftRevisions] = useState<Record<string, number>>({});
+
+  const getMeetingDraftRevision = (meetingId: string): number => {
+    return meetingDraftRevisions[meetingId] || 0;
+  };
+
+  const createGenerationToken = () => {
+    const rev = meetingDraftRevisions[activeMeetingId] || 0;
+    return {
+      companyId: activeCompanyId,
+      meetingId: activeMeetingId,
+      editRevision: rev,
+    };
+  };
+
   const updateMeetingFeedback = (meetingId: string, feedbackSections: FeedbackSectionData[]) => {
+    setMeetingDraftRevisions((prev) => ({
+      ...prev,
+      [meetingId]: (prev[meetingId] || 0) + 1,
+    }));
+
     setCompanies((prev) =>
       prev.map((c) => {
-        if (c.id === activeCompanyId) {
+        if (c.meetings?.some((m) => m.id === meetingId)) {
           return {
             ...c,
             meetings: (c.meetings || []).map((m) => {
@@ -809,6 +854,40 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
       })
     );
   };
+
+  const applyGeneratedFeedbackDraft = (
+    meetingId: string,
+    newSections: FeedbackSectionData[],
+    token: { companyId: string; meetingId: string; editRevision: number }
+  ): boolean => {
+    // 1. Verify meeting and company still match active view and target meetingId
+    if (
+      token.companyId !== activeCompanyId ||
+      token.meetingId !== activeMeetingId ||
+      token.meetingId !== meetingId
+    ) {
+      console.warn('[AI Concurrency] Dropped stale draft generation response: meeting changed.');
+      return false;
+    }
+
+    // 2. Verify user has not edited during generation flight
+    const currentRev = meetingDraftRevisions[meetingId] || 0;
+    if (currentRev !== token.editRevision) {
+      console.warn('[AI Concurrency] Dropped draft generation response: user edited during generation flight.');
+      triggerToast('Draft Kept', 'Your manual edits in progress were preserved over the generated draft.', 'info');
+      return false;
+    }
+
+    // 3. Apply draft
+    updateMeetingFeedback(meetingId, newSections);
+    return true;
+  };
+
+  const activeMeetingFeedback = useMemo(() => {
+    return activeMeeting?.feedbackSummary && activeMeeting.feedbackSummary.length > 0
+      ? activeMeeting.feedbackSummary
+      : DEFAULT_FEEDBACK_SECTIONS;
+  }, [activeMeeting]);
 
   // Contract Details & Documents actions
   const updateContractDetails = (updates: Partial<OrganizationContractDetails>) => {
@@ -1208,7 +1287,7 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
       .every((q) => currentReviewer.scores[q.id] !== undefined);
   }, [questions, currentReviewer]);
 
-  // Committee matrix calculations across all reviewers for active meeting
+  // Committee matrix calculations across submitted reviewers for active meeting
   const committeeMatrix = useMemo(() => {
     const reviewerRows = reviewers.map((rev) => {
       const computed = computeReviewerCategoryScores(rev);
@@ -1222,15 +1301,34 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
       };
     });
 
-    const sumTeam = reviewerRows.reduce((a, b) => a + b.teamAvg, 0);
-    const sumMarket = reviewerRows.reduce((a, b) => a + b.marketAvg, 0);
-    const sumFit = reviewerRows.reduce((a, b) => a + b.fitAvg, 0);
-    const sumRisk = reviewerRows.reduce((a, b) => a + b.riskAvg, 0);
-    const sumOverall = reviewerRows.reduce((a, b) => a + b.overallAvg, 0);
-    const count = reviewerRows.length || 1;
+    const submittedReviewerRows = reviewerRows.filter((r) => Boolean(r.reviewer.isSubmitted));
+    const count = submittedReviewerRows.length;
+
+    if (count === 0) {
+      return {
+        reviewerRows,
+        submittedReviewerRows,
+        categoryAverages: {
+          team: 0,
+          market: 0,
+          fit: 0,
+          risk: 0,
+          total: 0,
+        },
+        submittedCount: 0,
+        totalCount: reviewerRows.length,
+      };
+    }
+
+    const sumTeam = submittedReviewerRows.reduce((a, b) => a + b.teamAvg, 0);
+    const sumMarket = submittedReviewerRows.reduce((a, b) => a + b.marketAvg, 0);
+    const sumFit = submittedReviewerRows.reduce((a, b) => a + b.fitAvg, 0);
+    const sumRisk = submittedReviewerRows.reduce((a, b) => a + b.riskAvg, 0);
+    const sumOverall = submittedReviewerRows.reduce((a, b) => a + b.overallAvg, 0);
 
     return {
       reviewerRows,
+      submittedReviewerRows,
       categoryAverages: {
         team: Number((sumTeam / count).toFixed(1)),
         market: Number((sumMarket / count).toFixed(1)),
@@ -1238,6 +1336,8 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
         risk: Number((sumRisk / count).toFixed(1)),
         total: Number((sumOverall / count).toFixed(1)),
       },
+      submittedCount: count,
+      totalCount: reviewerRows.length,
     };
   }, [reviewers, questions]);
 
@@ -1313,9 +1413,10 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const resetToDefaults = () => {
-    setCompanies(INITIAL_COMPANIES);
-    setActiveCompanyId('vayim');
-    setActiveMeetingId('vayim_initial_pitch');
+    setCompanies(INITIAL_COMPANIES.map((c) => migrateCompanyRecord(c, { vayim: INITIAL_REVIEWERS })));
+    setActiveCompanyId(INITIAL_COMPANIES[0]?.id || 'solaris_bio');
+    setActiveMeetingId(INITIAL_COMPANIES[0]?.meetings?.[0]?.id || 'solaris_pitch');
+    setMeetingDraftRevisions({});
     setQuestions(QUESTIONS_DATA);
     setSectionHeaders(DEFAULT_SECTION_HEADERS);
     setEvaluationsByCompany({
@@ -1356,6 +1457,10 @@ export const EvaluationProvider: React.FC<{ children: ReactNode }> = ({ children
         addProgressCheckin,
         createInitialPitch,
         updateMeetingFeedback,
+        activeMeetingFeedback,
+        createGenerationToken,
+        applyGeneratedFeedbackDraft,
+        getMeetingDraftRevision,
         contractDetails,
         updateContractDetails,
         contractDocuments,

@@ -527,13 +527,17 @@ export const INITIAL_REVIEWERS: ReviewerScoreRecord[] = [
   },
 ];
 
-export const DEFAULT_FEEDBACK_SECTIONS: FeedbackSectionData[] = [
+import { SYNTHETIC_SOLARIS_COMPANY, SYNTHETIC_NANCY_FEEDBACK_SECTIONS } from '../fixtures/syntheticFixture';
+
+export const NANCY_STANDARDIZED_FEEDBACK_SECTIONS: FeedbackSectionData[] = [
   {
     id: 'overall',
     title: 'OVERALL FEEDBACK',
     prompt: 'What is the overall view on the company, where it is at now, and its future path.',
     summary:
       'Company is a small team with a potentially very valuable technology portfolio once the injection technology and therapeutic component are married. However, each may be valuable independently. The team possesses the technical expertise to drive progress at a high-level but will need support from staff in the laboratory and experts or advisors in the non-technical aspects of the business, such as the regulatory pathway, business development, and connections to partners. This technology is at the stage where partnership with ABI is both appropriate, feasible, and desirable, though they may quickly outgrow the facility. Marcel personally appears to be a driven, successful, and conscientious member of the community and would be welcome in the Austin ecosystem. Because of this the committee has recommended that Company be offered admission into the Incubator.',
+    quotes: [],
+    quoteRefs: [],
   },
   {
     id: 'team',
@@ -547,23 +551,11 @@ export const DEFAULT_FEEDBACK_SECTIONS: FeedbackSectionData[] = [
       "I think they're likely qualified to succeed with solution development. Commercial success is a different question. He is an accomplished PI with a long track record in the field.",
       'He seems to have many many academic collaborators and experience, but may need to engage other stakeholders in Austin ecosystem.',
     ],
+    quoteRefs: [],
   },
   {
-    id: 'abi_fit',
-    title: 'FEEDBACK ON RELATIONSHIP WITH ABI',
-    prompt: 'Does the mission of the company align with ABI? Would a relationship between the company and ABI be beneficial to both parties?',
-    categoryScoreKey: 'fit',
-    summary:
-      'The facility offered by ABI appears to have the vast majority of the instrumentation that the company would need for internal R&D as well as some validation. The size of the company also aligns with ABI’s portfolio. They will need to hire staff to conduct the work at the incubator and ensure those staff work well in these spaces. They will also need to conduct animal work at some point outside of ABI.',
-    quotes: [
-      '[Company would need] Cell culture, flow, qPCR, etc. They want to do assay dev and development of cell differentiation procedure. No animal work being done.',
-      "This wasn't completely clear to me. It seems like the space might be useful for making cells and assay development, but the case wasn't super-strong.",
-      'Yes he will be fine here [at ABI]',
-    ],
-  },
-  {
-    id: 'business_plan',
-    title: 'FEEDBACK ON BUSINESS PLAN',
+    id: 'value_prop',
+    title: 'FEEDBACK ON VALUE PROPOSITION',
     prompt: 'Does the company have a solution that is viable, desirable, and feasible? Is there a clear path to commercialization of the technology?',
     categoryScoreKey: 'market',
     summary:
@@ -573,11 +565,26 @@ export const DEFAULT_FEEDBACK_SECTIONS: FeedbackSectionData[] = [
       "It feels like they've figured out a potentially better solution to a problem that people want solved. It's not clear that they've figured out if someone would be willing to pay for the solution. (Focus was more on company acquisition than on the end customer.)",
       'This product has a long way to go. Direct injection of modified cells to the center of the brain will be a hard sell.',
     ],
+    quoteRefs: [],
   },
   {
-    id: 'technology',
-    title: 'FEEDBACK ON TECHNOLOGY',
-    prompt: 'Does the company have a technology that has been developed or there is significant confidence in it being developed?',
+    id: 'abi_fit',
+    title: 'FEEDBACK ON ABI FIT',
+    prompt: 'Does the mission of the company align with ABI? Would a relationship between the company and ABI be beneficial to both parties?',
+    categoryScoreKey: 'fit',
+    summary:
+      'The facility offered by ABI appears to have the vast majority of the instrumentation that the company would need for internal R&D as well as some validation. The size of the company also aligns with ABI’s portfolio. They will need to hire staff to conduct the work at the incubator and ensure those staff work well in these spaces. They will also need to conduct animal work at some point outside of ABI.',
+    quotes: [
+      '[Company would need] Cell culture, flow, qPCR, etc. They want to do assay dev and development of cell differentiation procedure. No animal work being done.',
+      "This wasn't completely clear to me. It seems like the space might be useful for making cells and assay development, but the case wasn't super-strong.",
+      'Yes he will be fine here [at ABI]',
+    ],
+    quoteRefs: [],
+  },
+  {
+    id: 'risk',
+    title: 'FEEDBACK ON RISK',
+    prompt: 'What are the technical, regulatory, IP, and financial risks, and how should they be addressed?',
     categoryScoreKey: 'risk',
     summary:
       'The technology appears to be at a very early stage, but has a large potential for dramatic improvement relative to competitors. This means the risk is high, but the potential is very great. Identifying the key ‘go / no-go’ experiments at ABI and technological gates more broadly will be key in maintaining momentum. The specific injection technology may have more monetary value than the cellular component at the end of the day, and further development and/or protection of this technology can de-risk the less mature therapeutic and cellular component. The regulatory risk of this technology should not be underestimated and evaluated internally and with advisors and external stakeholders.',
@@ -586,8 +593,107 @@ export const DEFAULT_FEEDBACK_SECTIONS: FeedbackSectionData[] = [
       'It [the technology] is well defined, but complicated.',
       'No iPS derived cell therapy has been approved previously, so risk there. Not personalized, they want allogeneic therapy from one single cell line',
     ],
+    quoteRefs: [],
   },
 ];
+
+/**
+ * Explicit migration function that maps legacy meeting sections to Nancy's 5 sections
+ * without silently relabeling content or assigning a Risk score to Technology.
+ */
+export const migrateMeetingFeedbackSections = (
+  existingSections?: FeedbackSectionData[]
+): FeedbackSectionData[] => {
+  if (!existingSections || existingSections.length === 0) {
+    return NANCY_STANDARDIZED_FEEDBACK_SECTIONS.map((s) => ({
+      ...s,
+      quotes: [...(s.quotes || [])],
+      quoteRefs: (s.quoteRefs || []).map((qr) => ({ ...qr })),
+    }));
+  }
+
+  const secMap = new Map(existingSections.map((s) => [s.id, s]));
+
+  // 1. Overall
+  const legacyOverall = secMap.get('overall');
+  const overallSec: FeedbackSectionData = {
+    id: 'overall',
+    title: legacyOverall?.title || 'OVERALL FEEDBACK',
+    prompt: legacyOverall?.prompt || 'What is the overall view on the company, where it is at now, and its future path.',
+    summary: legacyOverall?.summary || '',
+    quotes: [...(legacyOverall?.quotes || [])],
+    quoteRefs: (legacyOverall?.quoteRefs || []).map((qr) => ({ ...qr })),
+  };
+
+  // 2. Team
+  const legacyTeam = secMap.get('team');
+  const teamSec: FeedbackSectionData = {
+    id: 'team',
+    title: legacyTeam?.title || 'FEEDBACK ON TEAM',
+    prompt: legacyTeam?.prompt || 'Does the company possess the internal talent and/or hired external talent needed to make progress?',
+    categoryScoreKey: 'team',
+    summary: legacyTeam?.summary || '',
+    quotes: [...(legacyTeam?.quotes || [])],
+    quoteRefs: (legacyTeam?.quoteRefs || []).map((qr) => ({ ...qr })),
+  };
+
+  // 3. Value Proposition
+  const legacyVP = secMap.get('value_prop') || secMap.get('business_plan');
+  const vpSec: FeedbackSectionData = {
+    id: 'value_prop',
+    title: 'FEEDBACK ON VALUE PROPOSITION',
+    prompt: legacyVP?.prompt || 'Does the company have a solution that is viable, desirable, and feasible? Is there a clear path to commercialization of the technology?',
+    categoryScoreKey: 'market',
+    summary: legacyVP?.summary || '',
+    quotes: [...(legacyVP?.quotes || [])],
+    quoteRefs: (legacyVP?.quoteRefs || []).map((qr) => ({ ...qr })),
+  };
+
+  // 4. ABI Fit
+  const legacyFit = secMap.get('abi_fit');
+  const fitSec: FeedbackSectionData = {
+    id: 'abi_fit',
+    title: 'FEEDBACK ON ABI FIT',
+    prompt: legacyFit?.prompt || 'Does the mission of the company align with ABI? Would a relationship between the company and ABI be beneficial to both parties?',
+    categoryScoreKey: 'fit',
+    summary: legacyFit?.summary || '',
+    quotes: [...(legacyFit?.quotes || [])],
+    quoteRefs: (legacyFit?.quoteRefs || []).map((qr) => ({ ...qr })),
+  };
+
+  // 5. Risk
+  const legacyRisk = secMap.get('risk');
+  const riskSec: FeedbackSectionData = {
+    id: 'risk',
+    title: 'FEEDBACK ON RISK',
+    prompt: legacyRisk?.prompt || 'What are the technical, regulatory, IP, and financial risks, and how should they be addressed?',
+    categoryScoreKey: 'risk',
+    summary: legacyRisk?.summary || '',
+    quotes: [...(legacyRisk?.quotes || [])],
+    quoteRefs: (legacyRisk?.quoteRefs || []).map((qr) => ({ ...qr })),
+  };
+
+  const result = [overallSec, teamSec, vpSec, fitSec, riskSec];
+
+  // 6. Explicitly preserve legacy Technology section if present, WITHOUT assigning Risk score to Technology
+  const legacyTech = secMap.get('technology');
+  if (legacyTech) {
+    result.push({
+      id: 'technology',
+      title: legacyTech.title || 'FEEDBACK ON TECHNOLOGY',
+      prompt: legacyTech.prompt || 'Does the company have a technology that has been developed or there is significant confidence in it being developed?',
+      // CRITICAL: Explicitly undefined; DO NOT assign categoryScoreKey: 'risk' to Technology
+      categoryScoreKey: undefined,
+      summary: legacyTech.summary || '',
+      quotes: [...(legacyTech.quotes || [])],
+      quoteRefs: (legacyTech.quoteRefs || []).map((qr) => ({ ...qr })),
+    });
+  }
+
+  return result;
+};
+
+export const DEFAULT_FEEDBACK_SECTIONS: FeedbackSectionData[] = NANCY_STANDARDIZED_FEEDBACK_SECTIONS;
 
 export const DEFAULT_CONTACT_DETAILS: OrganizationContactDetails = {
   primaryContactName: 'Not provided',
@@ -751,6 +857,7 @@ export const INITIAL_COMPANY: CompanyAssessment = {
 };
 
 export const INITIAL_COMPANIES: CompanyAssessment[] = [
+  SYNTHETIC_SOLARIS_COMPANY,
   INITIAL_COMPANY,
   {
     id: 'bionanox',

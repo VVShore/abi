@@ -9,6 +9,10 @@
     "preview": "vite preview --port=4173 --host=127.0.0.1",
     "clean": "node -e \"['dist', 'server.js'].forEach(p => require('fs').rmSync(p, { recursive: true, force: true }))\"",
     "lint": "tsc --noEmit",
+    "server": "tsx server/index.ts",
+    "test": "vitest run --project unit",
+    "test:unit": "vitest run --project unit",
+    "test:storybook": "vitest run --project storybook",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

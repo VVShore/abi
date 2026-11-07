@@ -86,12 +86,28 @@ export interface EvaluationTopic {
 // Single Company / Organization & Meeting Architecture
 // ---------------------------------------------------------------------------
 
-export interface FeedbackSectionData {
+export type QuoteVerificationStatus = 'verified' | 'edited' | 'unverified';
+
+export interface ValidatedQuoteRef {
   id: string;
+  quote: string;
+  reviewerId: string;
+  reviewerName: string;
+  reviewerRole: string;
+  reviewerInitials?: string;
+  score?: number;
+  categoryKey?: 'team' | 'market' | 'fit' | 'risk';
+  sourceField?: 'sectionComments' | 'notes' | 'keyStrengths' | 'supportNeeded' | 'overallSummary';
+  verificationStatus: QuoteVerificationStatus;
+}
+
+export interface FeedbackSectionData {
+  id: string; // 'overall' | 'team' | 'value_prop' | 'abi_fit' | 'risk' or legacy ids
   title: string;
   prompt: string;
   summary: string;
-  quotes?: string[];
+  quotes?: string[]; // backwards compatibility
+  quoteRefs?: ValidatedQuoteRef[];
   categoryScoreKey?: 'team' | 'market' | 'fit' | 'risk';
 }
 
